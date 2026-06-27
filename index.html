@@ -135,8 +135,8 @@ body::before {
   background: rgba(0,0,0,.2);
 }
 .game-card-content { position: relative; z-index: 1; }
-.game-emoji { font-size: 34px; margin-bottom: 7px; display: block; line-height: 1; }
-.game-name { font-size: 12px; font-weight: 700; color: #fff; letter-spacing: .01em; }
+.game-emoji { display: none; }
+.game-name { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
 .game-desc { font-size: 9px; color: rgba(255,255,255,.55); margin-top: 3px; }
 
 /* ---- PLAYER QUICK-ADD ---- */
@@ -684,7 +684,6 @@ function renderGameGrid() {
       <div class="game-card-bg" style="${bgStyle}"></div>
       <div class="game-card-overlay"></div>
       <div class="game-card-content">
-        <div class="game-emoji">${g.emoji}</div>
         <div class="game-name">${g.name}</div>
         <div class="game-desc">${g.desc}</div>
       </div>
