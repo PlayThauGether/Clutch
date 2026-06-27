@@ -931,7 +931,7 @@ function renderFlip7Manche() {
                 <button class="btn-circle" onclick="f7Minus('${p.id}')">−</button>
                 <input type="text" inputmode="numeric" class="score-input" id="f7inp-${p.id}"
                   value="${val}"
-                  oninput="f7InputChange('${p.id}', this.value)">
+                  onchange="f7InputChange('${p.id}', this.value)">
                 <button class="btn-circle" onclick="f7Plus('${p.id}')">+</button>
                 <button class="btn-flip-bonus ${m.bonus[p.id] ? 'active' : ''}"
                   onclick="toggleFlip7Bonus('${p.id}')" title="+15 pts Flip 7">🃏</button>
@@ -1092,19 +1092,19 @@ function renderSkullKingManche() {
                 <div class="sk-field-label">Mise</div>
                 <input type="text" inputmode="numeric" class="sk-field" value="${d.mise}"
                   placeholder="—"
-                  oninput="updateSK(${mancheIdx},'${p.id}','mise',this.value)">
+                  onchange="updateSK(${mancheIdx},'${p.id}','mise',this.value)">
               </div>
               <div class="sk-field-wrap">
                 <div class="sk-field-label">Plis</div>
                 <input type="text" inputmode="numeric" class="sk-field" value="${d.plis}"
                   placeholder="—"
-                  oninput="updateSK(${mancheIdx},'${p.id}','plis',this.value)">
+                  onchange="updateSK(${mancheIdx},'${p.id}','plis',this.value)">
               </div>
               <div class="sk-field-wrap">
                 <div class="sk-field-label">Bonus</div>
                 <input type="text" inputmode="numeric" class="sk-field" value="${d.bonus}"
                   placeholder="0"
-                  oninput="updateSK(${mancheIdx},'${p.id}','bonus',this.value)">
+                  onchange="updateSK(${mancheIdx},'${p.id}','bonus',this.value)">
               </div>
               <div class="sk-pts ${ptsCls}">${bothFilled ? (pts > 0 ? '+' : '') + pts : '—'}</div>
             </div>
