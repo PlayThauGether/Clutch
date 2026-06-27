@@ -109,24 +109,35 @@ body::before {
 /* ---- GAME GRID ---- */
 .game-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
 .game-card {
-  background: var(--glass); border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  padding: 14px 8px 12px; text-align: center; cursor: pointer;
+  border: 1px solid var(--border);
+  cursor: pointer; position: relative;
+  overflow: hidden;
+  height: 150px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 12px 8px 10px; text-align: center;
   transition: all .2s;
+  background: var(--glass);
 }
-.game-card:hover { background: var(--glass-md); transform: translateY(-1px); }
-.game-card.selected { background: var(--glass-hi); border-color: var(--accent); box-shadow: 0 0 0 1px rgba(100,210,255,.3) inset; }
-.game-img {
-  width: 100%; aspect-ratio: 1;
-  object-fit: cover; border-radius: 10px;
-  margin-bottom: 7px;
-  background: var(--glass-md);
-  display: block;
+.game-card:hover { transform: translateY(-2px); border-color: var(--border-hi); }
+.game-card.selected { border-color: var(--accent); border-width: 2px; }
+.game-card-bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  filter: blur(3px) brightness(.3) saturate(1.8);
+  transform: scale(1.12);
+  transition: filter .3s;
 }
-.game-emoji { font-size: 26px; margin-bottom: 6px; display: none; }
-.game-name { font-size: 11px; font-weight: 600; color: var(--text); }
-.game-desc { font-size: 9px; color: var(--text-2); margin-top: 2px; }
+.game-card:hover .game-card-bg { filter: blur(2px) brightness(.38) saturate(1.8); }
+.game-card-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.2);
+}
+.game-card-content { position: relative; z-index: 1; }
+.game-emoji { font-size: 34px; margin-bottom: 7px; display: block; line-height: 1; }
+.game-name { font-size: 12px; font-weight: 700; color: #fff; letter-spacing: .01em; }
+.game-desc { font-size: 9px; color: rgba(255,255,255,.55); margin-top: 3px; }
 
 /* ---- PLAYER QUICK-ADD ---- */
 .quick-players { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
@@ -668,15 +679,15 @@ function showView(name) {
 // ============================================================
 function renderGameGrid() {
   document.getElementById('game-grid').innerHTML = Object.values(GAMES).map(g => {
-    const imgHtml = g.img
-      ? `<img class="game-img" src="${g.img}" alt="${g.name}"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='block'"
-          ><div class="game-emoji" style="display:none">${g.emoji}</div>`
-      : `<div class="game-emoji">${g.emoji}</div>`;
+    const bgStyle = g.img ? `background-image:url('${g.img}')` : '';
     return `<div class="game-card" id="gc-${g.id}" onclick="selectGame('${g.id}')">
-      ${imgHtml}
-      <div class="game-name">${g.name}</div>
-      <div class="game-desc">${g.desc}</div>
+      <div class="game-card-bg" style="${bgStyle}"></div>
+      <div class="game-card-overlay"></div>
+      <div class="game-card-content">
+        <div class="game-emoji">${g.emoji}</div>
+        <div class="game-name">${g.name}</div>
+        <div class="game-desc">${g.desc}</div>
+      </div>
     </div>`;
   }).join('');
 }
