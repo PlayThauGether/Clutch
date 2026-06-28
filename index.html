@@ -538,6 +538,22 @@ body::before {
 .counter-reset { font-size: 11px; color: var(--text-3); margin-top: 4px; cursor: pointer; background: none; border: none; font-family: inherit; }
 .counter-reset:hover { color: var(--text-2); }
 
+/* ---- AUTH ---- */
+.auth-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  object-fit: cover; border: 1.5px solid var(--border);
+  vertical-align: middle;
+}
+.auth-user-btn {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--glass-md); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px 4px 4px;
+  cursor: pointer; transition: background .2s;
+  font-family: inherit;
+}
+.auth-user-btn:hover { background: var(--glass-hi); }
+.auth-user-name { font-size: 12px; font-weight: 500; color: var(--text); max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 /* ---- ADMIN ---- */
 .admin-game-row { display:flex;flex-direction:column;gap:6px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08); }
 .admin-game-row:last-child { border-bottom:none; }
@@ -560,9 +576,17 @@ body::before {
   <header class="header">
     <div class="header-inner">
       <div class="logo">PTG<span class="logo-dot"> · </span>Board Games</div>
-      <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.3);border-radius:20px;padding:6px 12px;color:#64D2FF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
-        ⬇️ Installer
-      </button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.3);border-radius:20px;padding:6px 12px;color:#64D2FF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+          Installer
+        </button>
+        <div id="auth-btn-wrap">
+          <button id="auth-btn" onclick="toggleAuth()"
+            style="background:var(--glass-md);border:1px solid var(--border);border-radius:20px;padding:6px 13px;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s">
+            Connexion
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -693,6 +717,16 @@ body::before {
   </div>
 </div>
 
+<!-- MODAL: connexion utilisateur -->
+<div class="modal-overlay" id="modal-auth">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="auth-modal-title">Mon compte</div>
+    <div id="auth-modal-content"></div>
+    <div class="modal-actions" id="auth-modal-actions"></div>
+  </div>
+</div>
+
 <!-- MODAL: historique détail -->
 <div class="modal-overlay" id="modal-detail">
   <div class="modal">
@@ -739,21 +773,21 @@ const REF = 'ptg_boardgames';
 //  GAMES
 // ============================================================
 const GAMES_DEF = {
-  agricola:      { id:'agricola',      name:'Agricola',                   emoji:'', desc:'Décompte final', maxPlayers: 5,
+  agricola:      { id:'agricola', rules:'https://www.jeuxavolonte.asso.fr/regles/agricola.pdf',      name:'Agricola',                   emoji:'', desc:'Décompte final', maxPlayers: 5,
     img:'https://cf.geekdo-images.com/saRfGEGSPFHzMtDsECf6xg__opengraph/img/HXClHNWjSWuCJLyLrXYiHJTSbEk=/fit-in/1200x630/filters:strip_icc()/pic6137663.jpg', img_banner:'' },
-  dewan:         { id:'dewan',         name:'Dewan',                      emoji:'', desc:'Décompte final · 4 catégories', maxPlayers: 4,
+  dewan:         { id:'dewan', rules:'https://cdn.svc.asmodee.net/production-spacecowboys/uploads/2025/11/SCFC01_FR_DEWAN_RULES_20250612_compressed.pdf',         name:'Dewan',                      emoji:'', desc:'Décompte final · 4 catégories', maxPlayers: 4,
     img:'', img_banner:'' },
-  flip7:         { id:'flip7',         name:'Flip 7',                     emoji:'', desc:'Stop ou encore · 200 pts', maxPlayers: 18,
+  flip7:         { id:'flip7', rules:'https://media.play-in.com/pdf/rules_games/flip_7_fr.pdf',         name:'Flip 7',                     emoji:'', desc:'Stop ou encore · 200 pts', maxPlayers: 18,
     img:'https://catchupgames.com/wp-content/uploads/2022/10/vq1w6Btk.jpg', img_banner:'' },
-  iaww:          { id:'iaww',          name:"It's a Wonderful World",     emoji:'', desc:'Décompte final · 4 tours', maxPlayers: 5,
+  iaww:          { id:'iaww', rules:'https://trukmuchspot.fr/wp-content/uploads/2020/03/Wonderful-World-regles.pdf',          name:"It's a Wonderful World",     emoji:'', desc:'Décompte final · 4 tours', maxPlayers: 5,
     img:'', img_banner:'' },
-  pillards:      { id:'pillards',      name:'Pillards de la Mer du Nord', emoji:'', desc:'Décompte final', maxPlayers: 4,
+  pillards:      { id:'pillards', rules:'https://cdn.1j1ju.com/medias/25/d4/83-pillards-de-la-mer-du-nord-regle.pdf',      name:'Pillards de la Mer du Nord', emoji:'', desc:'Décompte final', maxPlayers: 4,
     img:'', img_banner:'' },
-  seven_wonders: { id:'seven_wonders', name:'7 Wonders',                  emoji:'', desc:'Décompte final · 7 catégories', maxPlayers: 7,
+  seven_wonders: { id:'seven_wonders', rules:'https://www.jeuxavolonte.asso.fr/regles/7_wonders.pdf', name:'7 Wonders',                  emoji:'', desc:'Décompte final · 7 catégories', maxPlayers: 7,
     img:'', img_banner:'' },
-  skull_king:    { id:'skull_king',    name:'Skull King',                  emoji:'', desc:'Jeu de plis · 10 manches', maxPlayers: 8,
+  skull_king:    { id:'skull_king', rules:'https://media.play-in.com/pdf/rules_games/skull_king_regles_fr.pdf',    name:'Skull King',                  emoji:'', desc:'Jeu de plis · 10 manches', maxPlayers: 8,
     img:'https://www.grandpabecksgames.com/cdn/shop/files/SK_Main_1200x1200.jpg?v=1780682436', img_banner:'' },
-  wingspan:      { id:'wingspan',      name:'Wingspan',                   emoji:'', desc:'Décompte final · 4 manches', maxPlayers: 5,
+  wingspan:      { id:'wingspan', rules:'https://ludovox.fr/wp-content/uploads/2021/06/RExWingspanFR.pdf',      name:'Wingspan',                   emoji:'', desc:'Décompte final · 4 manches', maxPlayers: 5,
     img:'', img_banner:'' },
 };
 // Tri alphabétique
@@ -880,13 +914,7 @@ let selectedSessId = null;
 function init() {
   try { sessions = JSON.parse(localStorage.getItem('ptg_sessions') || '[]'); } catch(e) {}
   loadCounters();
-  db.ref(REF+'/sessions').on('value', snap => {
-    const d = snap.val();
-    if (d) {
-      Object.values(d).forEach(s => { if (!sessions.find(x => x.id === s.id)) sessions.push(s); });
-      localStorage.setItem('ptg_sessions', JSON.stringify(sessions));
-    }
-  });
+  // Sessions chargées via loadUserSessions() quand l'utilisateur est connecté
   renderGameGrid();
 }
 
@@ -1622,6 +1650,17 @@ function gameHeroHTML(gameId, subtitle, navHTML) {
   const hasBanner = !!banner;
   const bgSrc  = banner || thumb;
   const filter = hasBanner ? 'brightness(.75)' : 'blur(8px) brightness(.35) saturate(1.5)';
+  const rulesBtn = g?.rules
+    ? `<a href="${g.rules}" target="_blank" rel="noopener"
+        style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;
+               color:rgba(255,255,255,.6);background:rgba(255,255,255,.1);
+               border:1px solid rgba(255,255,255,.18);border-radius:8px;
+               padding:4px 9px;text-decoration:none;margin-top:5px;transition:background .15s"
+        onmouseover="this.style.background='rgba(255,255,255,.18)'"
+        onmouseout="this.style.background='rgba(255,255,255,.1)'">
+        📄 Règles du jeu
+      </a>`
+    : '';
   return `
     <div class="game-hero${hasBanner ? ' has-banner' : ''}" style="margin-bottom:12px">
       ${bgSrc ? `<div class="game-hero-bg" style="background-image:url('${bgSrc}');filter:${filter}"></div>` : ''}
@@ -1630,6 +1669,7 @@ function gameHeroHTML(gameId, subtitle, navHTML) {
         <div class="game-hero-left">
           <div class="game-hero-title">${g?.name || ''}</div>
           <div class="game-hero-sub">${subtitle}</div>
+          ${rulesBtn}
         </div>
         <div class="game-hero-nav">${navHTML}</div>
       </div>
@@ -2555,10 +2595,15 @@ function showResults(results) {
 
 function saveAndFinish() {
   if (!session) return;
-  const s = { ...session, savedAt: new Date().toISOString() };
+  if (!currentUser) {
+    openLoginPanel();
+    toast('Connecte-toi pour sauvegarder ta partie !');
+    return;
+  }
+  const s = { ...session, savedAt: new Date().toISOString(), userId: currentUser.uid };
   sessions.push(s); saveLocal();
-  db.ref(REF + '/sessions/' + s.id).set(s);
-  toast('Partie sauvegardée !');
+  db.ref(REF + '/users/' + currentUser.uid + '/sessions/' + s.id).set(s);
+  toast('Partie sauvegardee !');
   session = null; selectedGameId = null; quickPlayers = [];
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('session-setup').style.display = 'none';
@@ -2895,6 +2940,114 @@ function loadGameImages() {
 }
 
 
+
+// ============================================================
+//  AUTH — Comptes Google
+// ============================================================
+const auth = firebase.auth();
+let currentUser = null;
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  updateAuthUI();
+  if (user) {
+    // Charger les sessions de CET utilisateur depuis Firebase
+    loadUserSessions();
+  }
+});
+
+function updateAuthUI() {
+  const btn = document.getElementById('auth-btn');
+  const wrap = document.getElementById('auth-btn-wrap');
+  if (!btn || !wrap) return;
+  if (currentUser) {
+    wrap.innerHTML = `<button class="auth-user-btn" onclick="toggleAuth()">
+      ${currentUser.photoURL ? `<img class="auth-avatar" src="${currentUser.photoURL}">` : ''}
+      <span class="auth-user-name">${currentUser.displayName || currentUser.email}</span>
+    </button>`;
+  } else {
+    wrap.innerHTML = `<button id="auth-btn" onclick="toggleAuth()"
+      style="background:var(--glass-md);border:1px solid var(--border);border-radius:20px;padding:6px 13px;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">
+      Connexion
+    </button>`;
+  }
+}
+
+function toggleAuth() {
+  if (currentUser) {
+    openUserPanel();
+  } else {
+    openLoginPanel();
+  }
+}
+
+function openLoginPanel() {
+  document.getElementById('auth-modal-title').textContent = 'Connexion';
+  document.getElementById('auth-modal-content').innerHTML = `
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">
+      Connecte-toi pour sauvegarder tes parties et suivre tes statistiques personnelles.
+    </p>
+    <button class="btn btn-primary btn-full" onclick="signInWithGoogle()">
+      Se connecter avec Google
+    </button>`;
+  document.getElementById('auth-modal-actions').innerHTML = `
+    <button class="btn btn-glass btn-sm" onclick="closeModal('modal-auth')">Annuler</button>`;
+  document.getElementById('modal-auth').classList.add('open');
+}
+
+function openUserPanel() {
+  const u = currentUser;
+  document.getElementById('auth-modal-title').textContent = 'Mon compte';
+  document.getElementById('auth-modal-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      ${u.photoURL ? `<img src="${u.photoURL}" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--border)">` : ''}
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--text)">${u.displayName || 'Utilisateur'}</div>
+        <div style="font-size:12px;color:var(--text-2);margin-top:2px">${u.email}</div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--text-2)">
+      Tes parties sont sauvegardées et synchronisées sur tous tes appareils.
+    </div>`;
+  document.getElementById('auth-modal-actions').innerHTML = `
+    <button class="btn btn-danger btn-sm" onclick="signOutUser()">Déconnexion</button>
+    <button class="btn btn-glass btn-sm" onclick="closeModal('modal-auth')">Fermer</button>`;
+  document.getElementById('modal-auth').classList.add('open');
+}
+
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(result => {
+      currentUser = result.user;
+      closeModal('modal-auth');
+      toast('Bienvenue ' + (currentUser.displayName || '') + ' !');
+      loadUserSessions();
+    })
+    .catch(err => toast('Erreur : ' + err.message));
+}
+
+function signOutUser() {
+  auth.signOut().then(() => {
+    currentUser = null;
+    // Revenir aux sessions locales
+    try { sessions = JSON.parse(localStorage.getItem('ptg_sessions') || '[]'); } catch(e) { sessions = []; }
+    closeModal('modal-auth');
+    toast('Déconnecté');
+    renderHistory();
+  });
+}
+
+function loadUserSessions() {
+  if (!currentUser) return;
+  db.ref(REF + '/users/' + currentUser.uid + '/sessions').on('value', snap => {
+    const data = snap.val() || {};
+    sessions = Object.values(data);
+    saveLocal();
+    renderHistory();
+    renderStats();
+  });
+}
 
 init();
 loadGameImages();
