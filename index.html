@@ -682,33 +682,111 @@ const GAMES = {
   skull_king: { id:'skull_king', name:'Skull King', emoji:'💀', desc:'Jeu de plis · 10 manches', maxPlayers: 8,
     img:'https://www.grandpabecksgames.com/cdn/shop/files/SK_Main_1200x1200.jpg?v=1780682436' },
   agricola:   { id:'agricola',   name:'Agricola',   emoji:'🌾', desc:'Décompte final', maxPlayers: 5,
-    img:'https://cf.geekdo-images.com/saRfGEGSPFHzMtDsECf6xg__opengraph/img/HXClHNWjSWuCJLyLrXYiHJTSbEk=/fit-in/1200x630/filters:strip_icc()/pic6137663.jpg' }
+    img:'https://cf.geekdo-images.com/saRfGEGSPFHzMtDsECf6xg__opengraph/img/HXClHNWjSWuCJLyLrXYiHJTSbEk=/fit-in/1200x630/filters:strip_icc()/pic6137663.jpg' },
+  seven_wonders: { id:'seven_wonders', name:'7 Wonders', emoji:'🏛️', desc:'Décompte final · 7 catégories', maxPlayers: 7,
+    img:'' }
 };
+
+// ============================================================
+//  7 WONDERS — calcul science
+// ============================================================
+function sw7ScienceScore(roue, compas, tablette) {
+  // Chaque symbole au carré + 7 pts par set de 3 symboles différents
+  const r = parseInt(roue) || 0;
+  const c = parseInt(compas) || 0;
+  const t = parseInt(tablette) || 0;
+  const sets = Math.min(r, c, t);
+  return (r * r) + (c * c) + (t * t) + (sets * 7);
+}
+
+// Convertit une quantité en points selon le barème Agricola
+function agrScore(id, qty) {
+  const q = parseInt(qty) || 0;
+  switch(id) {
+    case 'champs':
+      if (q <= 1) return -1;
+      if (q === 2) return 1;
+      if (q === 3) return 2;
+      if (q === 4) return 3;
+      return 4; // 5+
+    case 'paturages':
+      if (q === 0) return -1;
+      if (q === 1) return 1;
+      if (q === 2) return 2;
+      if (q === 3) return 3;
+      return 4; // 4+
+    case 'cereales':
+      if (q === 0) return -1;
+      if (q <= 3) return 1;
+      if (q <= 5) return 2;
+      if (q <= 7) return 3;
+      return 4; // 8+
+    case 'legumes':
+      if (q === 0) return -1;
+      if (q === 1) return 1;
+      if (q === 2) return 2;
+      if (q === 3) return 3;
+      return 4; // 4+
+    case 'moutons':
+      if (q === 0) return -1;
+      if (q <= 3) return 1;
+      if (q <= 5) return 2;
+      if (q <= 7) return 3;
+      return 4; // 8+
+    case 'sangliers':
+      if (q === 0) return -1;
+      if (q <= 2) return 1;
+      if (q <= 4) return 2;
+      if (q <= 6) return 3;
+      return 4; // 7+
+    case 'boeufs':
+      if (q === 0) return -1;
+      if (q === 1) return 1;
+      if (q <= 3) return 2;
+      if (q <= 5) return 3;
+      return 4; // 6+
+    case 'stables':
+      return q; // 1 pt par étable
+    case 'cases_vides':
+      return -q; // -1 pt par case vide
+    case 'membres':
+      return q * 3; // 3 pts par membre
+    case 'habitation':
+      return q; // points directs (calculés séparément selon matériau)
+    case 'amenagements':
+    case 'speciaux':
+      return q; // points directs saisis
+    case 'mendicite':
+      return -(q * 3); // -3 pts par carte
+    default:
+      return q;
+  }
+}
 
 const AGRICOLA_CATS = [
   { section:'Ferme', items:[
-    { id:'champs',      label:'Champs',              hint:'0-1→-1 | 2→1 | 3→2 | 4→3 | 5+→4' },
-    { id:'paturages',   label:'Pâturages',            hint:'0→-1 | 1→1 | 2→2 | 3→3 | 4+→4' },
-    { id:'stables',     label:'Étables clôturées',    hint:'1 pt par étable' },
-    { id:'cases_vides', label:'Cases inutilisées',    hint:'-1 pt par case vide', neg:true },
+    { id:'champs',      label:'Champs',               unit:'champs',  hint:'Quantité de champs labourés' },
+    { id:'paturages',   label:'Pâturages',             unit:'pâturages', hint:'Nombre de pâturages clôturés' },
+    { id:'stables',     label:'Étables clôturées',     unit:'étables', hint:'1 pt par étable', direct:true },
+    { id:'cases_vides', label:'Cases inutilisées',     unit:'cases',   hint:'-1 pt par case vide non clôturée', neg:true, direct:true },
   ]},
   { section:'Récoltes', items:[
-    { id:'cereales',    label:'Céréales',             hint:'0→-1 | 1-3→1 | 4-5→2 | 6-7→3 | 8+→4' },
-    { id:'legumes',     label:'Légumes',              hint:'0→-1 | 1→1 | 2→2 | 3→3 | 4+→4' },
+    { id:'cereales',    label:'Céréales',              unit:'grains',  hint:'Quantité de grains sur ta ferme' },
+    { id:'legumes',     label:'Légumes',               unit:'légumes', hint:'Quantité de légumes sur ta ferme' },
   ]},
   { section:'Bétail', items:[
-    { id:'moutons',     label:'Moutons',              hint:'0→-1 | 1-3→1 | 4-5→2 | 6-7→3 | 8+→4' },
-    { id:'sangliers',   label:'Sangliers',            hint:'0→-1 | 1-2→1 | 3-4→2 | 5-6→3 | 7+→4' },
-    { id:'boeufs',      label:'Bœufs',                hint:'0→-1 | 1→1 | 2-3→2 | 4-5→3 | 6+→4' },
+    { id:'moutons',     label:'Moutons',               unit:'moutons', hint:'Nombre de moutons' },
+    { id:'sangliers',   label:'Sangliers',             unit:'sangliers', hint:'Nombre de sangliers' },
+    { id:'boeufs',      label:'Bœufs',                 unit:'bœufs',   hint:'Nombre de bœufs' },
   ]},
   { section:'Habitation & Famille', items:[
-    { id:'habitation',  label:'Habitation',           hint:'0 bois | 1/pièce argile | 2/pièce pierre' },
-    { id:'membres',     label:'Membres de la famille', hint:'3 pts par membre (2–5)' },
+    { id:'habitation',  label:'Habitation',            unit:'pts',     hint:'0=bois | 1/pièce=argile | 2/pièce=pierre → saisir les pts', direct:true },
+    { id:'membres',     label:'Membres de la famille', unit:'membres', hint:'3 pts par membre (saisir le nb de membres)' },
   ]},
   { section:'Cartes & Bonus', items:[
-    { id:'amenagements',label:'Aménagements',         hint:'Points indiqués sur les cartes' },
-    { id:'mendicite',   label:'Mendicité',            hint:'-3 pts par carte', neg:true },
-    { id:'speciaux',    label:'Points spéciaux',      hint:'Savoir-faire et bonus divers' },
+    { id:'amenagements',label:'Aménagements',          unit:'pts',     hint:'Points indiqués sur tes cartes', direct:true },
+    { id:'mendicite',   label:'Mendicité',             unit:'cartes',  hint:'-3 pts par carte de mendicité', neg:true },
+    { id:'speciaux',    label:'Points spéciaux',       unit:'pts',     hint:'Savoir-faire et autres bonus', direct:true },
   ]}
 ];
 
@@ -835,9 +913,10 @@ function startGame() {
     startedAt: new Date().toISOString(),
     data: {}, finished: false
   };
-  if (g.id === 'flip7')      initFlip7();
-  if (g.id === 'skull_king') initSkullKing();
-  if (g.id === 'agricola')   initAgricola();
+  if (g.id === 'flip7')         initFlip7();
+  if (g.id === 'skull_king')    initSkullKing();
+  if (g.id === 'agricola')      initAgricola();
+  if (g.id === 'seven_wonders') initSevenWonders();
   showView('game');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   renderCurrentManche();
@@ -1149,16 +1228,20 @@ function renderAgricolaManche() {
       <div class="manche-topbar">
         <div>
           <div class="manche-title">🌾 Agricola</div>
-          <div class="manche-sub">Décompte final</div>
+          <div class="manche-sub">Saisis les quantités, les points sont calculés automatiquement</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="finishGame('agricola')">Résultats →</button>
       </div>
 
       <!-- en-têtes joueurs -->
-      <div style="display:flex;margin:0 0 4px">
+      <div style="display:flex;margin:0 0 4px;padding:0 0 0 0">
         <div style="flex:1"></div>
-        <div class="agr-totals">
-          ${players.map(p => `<div class="agr-player-head">${p.emoji}<br>${p.name}</div>`).join('')}
+        <div style="display:flex;gap:6px">
+          ${players.map(p => `
+            <div style="width:72px;text-align:center">
+              <div style="font-size:11px;color:var(--text-2);font-weight:500">${p.name}</div>
+              <div style="font-size:9px;color:var(--text-3)">qté → pts</div>
+            </div>`).join('')}
         </div>
       </div>
 
@@ -1171,21 +1254,37 @@ function renderAgricolaManche() {
                 <div class="agr-label-text">${item.label}</div>
                 <div class="agr-label-hint">${item.hint}</div>
               </div>
-              <div class="agr-inputs">
-                ${players.map(p => `
-                  <input type="text" inputmode="numeric" class="agr-field ${item.neg ? 'neg' : ''}"
-                    value="${data.scores[p.id][item.id]}"
-                    oninput="updateAgricola('${p.id}','${item.id}',this.value)">`).join('')}
+              <div style="display:flex;gap:6px">
+                ${players.map(p => {
+                  const qty = data.scores[p.id][item.id] || 0;
+                  const pts = agrScore(item.id, qty);
+                  const ptsCol = pts > 0 ? 'var(--green)' : pts < 0 ? 'var(--red)' : 'var(--text-3)';
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric"
+                      class="agr-field ${item.neg ? 'neg' : ''}"
+                      style="width:100%"
+                      value="${qty}"
+                      placeholder="0"
+                      onchange="updateAgricola('${p.id}','${item.id}',this.value)">
+                    <div style="font-size:11px;font-weight:700;color:${ptsCol}" id="agr-pts-${p.id}-${item.id}">
+                      ${pts > 0 ? '+' : ''}${pts} pt${Math.abs(pts) > 1 ? 's' : ''}
+                    </div>
+                  </div>`;
+                }).join('')}
               </div>
             </div>`).join('')}
         </div>`).join('')}
 
       <!-- total live -->
-      <div class="card bright">
-        <div class="agr-total-row" style="border:none;padding:0;margin:0">
-          <div class="agr-total-label">Total</div>
-          <div class="agr-totals" id="agr-totals-display">
-            ${players.map(p => `<div class="agr-total-val" id="agrt-${p.id}">0</div>`).join('')}
+      <div class="card" style="background:var(--glass-md)">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;font-size:14px;font-weight:700;color:var(--accent)">Total</div>
+          <div style="display:flex;gap:6px" id="agr-totals-display">
+            ${players.map(p => `
+              <div style="width:72px;text-align:center">
+                <div style="font-size:22px;font-weight:700;color:var(--text)" id="agrt-${p.id}">0</div>
+                <div style="font-size:10px;color:var(--text-2)">${p.name}</div>
+              </div>`).join('')}
           </div>
         </div>
       </div>
@@ -1198,7 +1297,16 @@ function renderAgricolaManche() {
 }
 
 function updateAgricola(pid, cat, val) {
-  session.data.scores[pid][cat] = parseInt(val) || 0;
+  const qty = parseInt(val) || 0;
+  session.data.scores[pid][cat] = qty;
+  // Mettre à jour le label de pts pour cette cellule
+  const ptsEl = document.getElementById('agr-pts-' + pid + '-' + cat);
+  if (ptsEl) {
+    const pts = agrScore(cat, qty);
+    const col = pts > 0 ? 'var(--green)' : pts < 0 ? 'var(--red)' : 'var(--text-3)';
+    ptsEl.style.color = col;
+    ptsEl.textContent = (pts > 0 ? '+' : '') + pts + ' pt' + (Math.abs(pts) > 1 ? 's' : '');
+  }
   updateAgricolaTotals();
 }
 
@@ -1207,23 +1315,273 @@ function updateAgricolaTotals() {
   let max = -Infinity;
   const vals = {};
   players.forEach(p => {
-    vals[p.id] = Object.values(data.scores[p.id]).reduce((a, b) => a + (parseInt(b) || 0), 0);
+    // Sommer les POINTS calculés (pas les quantités brutes)
+    vals[p.id] = AGRICOLA_CATS.flatMap(s => s.items).reduce((sum, item) => {
+      return sum + agrScore(item.id, data.scores[p.id][item.id] || 0);
+    }, 0);
     if (vals[p.id] > max) max = vals[p.id];
   });
   players.forEach(p => {
     const el = document.getElementById('agrt-' + p.id);
-    if (el) { el.textContent = vals[p.id]; el.className = 'agr-total-val' + (vals[p.id] === max ? ' winner' : ''); }
+    if (el) { el.textContent = vals[p.id]; el.style.color = vals[p.id] === max ? 'var(--green)' : 'var(--text)'; }
   });
 }
 
 // ============================================================
 //  RENDER CURRENT MANCHE (dispatcher)
 // ============================================================
+// ============================================================
+//  7 WONDERS
+// ============================================================
+function initSevenWonders() {
+  const fields = ['militaire','tresor','merveille','civil','commercial','guildes','roue','compas','tablette'];
+  session.data.scores = Object.fromEntries(
+    session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
+  );
+}
+
+function renderSevenWondersManche() {
+  const { players, data } = session;
+  const el = document.getElementById('view-game');
+
+  // Calculs live
+  const totaux = players.map(p => {
+    const d = data.scores[p.id];
+    const tresorPts = Math.floor((parseInt(d.tresor)||0) / 3);
+    const sciPts = sw7ScienceScore(d.roue, d.compas, d.tablette);
+    const total = (parseInt(d.militaire)||0) + tresorPts +
+      (parseInt(d.merveille)||0) + (parseInt(d.civil)||0) +
+      (parseInt(d.commercial)||0) + (parseInt(d.guildes)||0) + sciPts;
+    return { id: p.id, total, tresorPts, sciPts };
+  });
+
+  el.innerHTML = `
+    <div class="manche-screen">
+      <div class="manche-topbar">
+        <div>
+          <div class="manche-title">🏛️ 7 Wonders</div>
+          <div class="manche-sub">Saisis les valeurs, les points sont calculés</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="finishGame('seven_wonders')">Résultats →</button>
+      </div>
+
+      <!-- totaux live -->
+      <div class="totals-bar">
+        ${players.map((p, i) => {
+          const t = totaux[i];
+          return `<div class="total-pill">
+            <div class="total-pill-name">${p.emoji} ${p.name}</div>
+            <div class="total-pill-val" style="color:var(--accent)">${t.total}</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- en-têtes joueurs -->
+      <div style="display:flex;margin:0 0 6px">
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:6px">
+          ${players.map(p => `<div style="width:72px;text-align:center;font-size:11px;color:var(--text-2);font-weight:500">${p.name}</div>`).join('')}
+        </div>
+      </div>
+
+      <!-- 1. CONFLITS MILITAIRES -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">⚔️ Conflits militaires</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Points militaires</div>
+            <div class="agr-label-hint">Somme de tes jetons victoire (+1/+3/+5) moins défaites (-1 chacune)</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => {
+              const v = parseInt(data.scores[p.id].militaire)||0;
+              const col = v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--text-3)';
+              return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <input type="text" inputmode="numeric" class="agr-field"
+                  value="${data.scores[p.id].militaire}" placeholder="0"
+                  onchange="updateSW('${p.id}','militaire',this.value)">
+                <div style="font-size:11px;font-weight:700;color:${col}">${v > 0 ? '+' : ''}${v} pts</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. TRÉSOR -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">💰 Trésor</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Nombre de pièces</div>
+            <div class="agr-label-hint">1 pt par tranche de 3 pièces</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => {
+              const coins = parseInt(data.scores[p.id].tresor)||0;
+              const pts = Math.floor(coins / 3);
+              return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <input type="text" inputmode="numeric" class="agr-field"
+                  value="${data.scores[p.id].tresor}" placeholder="0"
+                  onchange="updateSW('${p.id}','tresor',this.value)">
+                <div style="font-size:11px;font-weight:700;color:var(--gold)">+${pts} pt${pts > 1 ? 's' : ''}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. MERVEILLE -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">🏛️ Merveille</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Points des étapes construites</div>
+            <div class="agr-label-hint">Somme des pts indiqués sur les étapes</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                value="${data.scores[p.id].merveille}" placeholder="0"
+                onchange="updateSW('${p.id}','merveille',this.value)">
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. BÂTIMENTS CIVILS (bleu) -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">🔵 Bâtiments civils</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Cartes bleues</div>
+            <div class="agr-label-hint">Somme des pts sur tes cartes bleues</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                value="${data.scores[p.id].civil}" placeholder="0"
+                onchange="updateSW('${p.id}','civil',this.value)">
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. COMMERCIAL + GUILDES -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">🟡 Commercial & Guildes</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Bâtiments commerciaux (jaune)</div>
+            <div class="agr-label-hint">Pts des cartes jaunes Âge III</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                value="${data.scores[p.id].commercial}" placeholder="0"
+                onchange="updateSW('${p.id}','commercial',this.value)">
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Guildes (violet)</div>
+            <div class="agr-label-hint">Pts calculés selon config des guildes</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                value="${data.scores[p.id].guildes}" placeholder="0"
+                onchange="updateSW('${p.id}','guildes',this.value)">
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. SCIENCE (vert) — calcul automatique ! -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">🟢 Science</div>
+        <div style="font-size:11px;color:var(--text-2);margin-bottom:8px;padding:0 2px">
+          Saisis le nombre de chaque symbole — l'app calcule : (nb²) + 7pts par set de 3 différents
+        </div>
+        ${['roue','compas','tablette'].map(sym => {
+          const labels = { roue: '⚙️ Roues', compas: '🧭 Compas', tablette: '📜 Tablettes' };
+          return `<div class="agr-row">
+            <div class="agr-label">
+              <div class="agr-label-text">${labels[sym]}</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              ${players.map(p => `<div style="width:72px">
+                <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                  value="${data.scores[p.id][sym]}" placeholder="0"
+                  onchange="updateSW('${p.id}','${sym}',this.value)">
+              </div>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+        <!-- Points science calculés live -->
+        <div style="display:flex;align-items:center;padding-top:8px;margin-top:4px;border-top:1px solid rgba(255,255,255,.08)">
+          <div style="flex:1;font-size:12px;color:var(--green);font-weight:600">Points science calculés</div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => `<div style="width:72px;text-align:center;font-size:14px;font-weight:700;color:var(--green)" id="sw-sci-${p.id}">
+              ${totaux[i].sciPts}
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- TOTAL -->
+      <div class="card" style="background:var(--glass-md)">
+        <div style="display:flex;align-items:center">
+          <div style="flex:1;font-size:14px;font-weight:700;color:var(--accent)">Total</div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => `<div style="width:72px;text-align:center">
+              <div style="font-size:22px;font-weight:700;color:var(--text)" id="sw-total-${p.id}">${totaux[i].total}</div>
+              <div style="font-size:10px;color:var(--text-2)">${p.name}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="manche-footer">
+        <button class="btn btn-primary btn-full" onclick="finishGame('seven_wonders')">🏆 Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
+function updateSW(pid, field, val) {
+  session.data.scores[pid][field] = val;
+  // Recalcul live pour ce joueur
+  const { players, data } = session;
+  players.forEach(p => {
+    const d = data.scores[p.id];
+    const tresorPts = Math.floor((parseInt(d.tresor)||0) / 3);
+    const sciPts = sw7ScienceScore(d.roue, d.compas, d.tablette);
+    const total = (parseInt(d.militaire)||0) + tresorPts +
+      (parseInt(d.merveille)||0) + (parseInt(d.civil)||0) +
+      (parseInt(d.commercial)||0) + (parseInt(d.guildes)||0) + sciPts;
+    const sciEl = document.getElementById('sw-sci-' + p.id);
+    const totEl = document.getElementById('sw-total-' + p.id);
+    if (sciEl) sciEl.textContent = sciPts;
+    if (totEl) totEl.textContent = total;
+  });
+  // Update totals bar
+  const pills = document.querySelectorAll('.total-pill-val');
+  players.forEach((p, i) => {
+    const d = data.scores[p.id];
+    const total = (parseInt(d.militaire)||0) + Math.floor((parseInt(d.tresor)||0)/3) +
+      (parseInt(d.merveille)||0) + (parseInt(d.civil)||0) +
+      (parseInt(d.commercial)||0) + (parseInt(d.guildes)||0) +
+      sw7ScienceScore(d.roue, d.compas, d.tablette);
+    if (pills[i]) pills[i].textContent = total;
+  });
+}
+
 function renderCurrentManche() {
   if (!session) return;
-  if (session.gameId === 'flip7')      renderFlip7Manche();
-  if (session.gameId === 'skull_king') renderSkullKingManche();
-  if (session.gameId === 'agricola')   renderAgricolaManche();
+  if (session.gameId === 'flip7')         renderFlip7Manche();
+  if (session.gameId === 'skull_king')    renderSkullKingManche();
+  if (session.gameId === 'agricola')      renderAgricolaManche();
+  if (session.gameId === 'seven_wonders') renderSevenWondersManche();
 }
 
 // ============================================================
@@ -1299,8 +1657,21 @@ function finishGame(gameId) {
   if (gameId === 'agricola') {
     results = players.map(p => ({
       ...p,
-      total: Object.values(data.scores[p.id]).reduce((a, b) => a + (parseInt(b) || 0), 0)
+      total: AGRICOLA_CATS.flatMap(s => s.items).reduce((sum, item) => {
+        return sum + agrScore(item.id, data.scores[p.id][item.id] || 0);
+      }, 0)
     })).sort((a, b) => b.total - a.total);
+  }
+
+  if (gameId === 'seven_wonders') {
+    results = players.map(p => {
+      const d = data.scores[p.id];
+      const sciPts = sw7ScienceScore(d.roue, d.compas, d.tablette);
+      const total = (parseInt(d.militaire)||0) + (parseInt(d.tresor_pts)||0) +
+        (parseInt(d.merveille)||0) + (parseInt(d.civil)||0) +
+        (parseInt(d.commercial)||0) + (parseInt(d.guildes)||0) + sciPts;
+      return { ...p, total, sciPts };
+    }).sort((a, b) => b.total - a.total);
   }
 
   session.results = results;
