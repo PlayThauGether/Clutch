@@ -744,6 +744,8 @@ const GAMES = {
   agricola:   { id:'agricola',   name:'Agricola',   emoji:'', desc:'Décompte final', maxPlayers: 5,
     img:'https://cf.geekdo-images.com/saRfGEGSPFHzMtDsECf6xg__opengraph/img/HXClHNWjSWuCJLyLrXYiHJTSbEk=/fit-in/1200x630/filters:strip_icc()/pic6137663.jpg' },
   seven_wonders: { id:'seven_wonders', name:'7 Wonders', emoji:'', desc:'Décompte final · 7 catégories', maxPlayers: 7,
+    img:'' },
+  dewan: { id:'dewan', name:'Dewan', emoji:'', desc:'Décompte final · 4 catégories', maxPlayers: 4,
     img:'' }
 };
 
@@ -977,6 +979,7 @@ function startGame() {
   if (g.id === 'skull_king')    initSkullKing();
   if (g.id === 'agricola')      initAgricola();
   if (g.id === 'seven_wonders') initSevenWonders();
+  if (g.id === 'dewan')         initDewan();
   showView('game');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   renderCurrentManche();
@@ -1634,12 +1637,225 @@ function updateSW(pid, field, val) {
   });
 }
 
+// ============================================================
+//  DEWAN
+// ============================================================
+function initDewan() {
+  const fields = ['histoire', 'feu', 'groupes', 'baies'];
+  session.data.scores = Object.fromEntries(
+    session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
+  );
+}
+
+function dewanLiveTotals() {
+  const { players, data } = session;
+  const scores = players.map(p => {
+    const d = data.scores[p.id];
+    return {
+      id: p.id,
+      histoire: parseInt(d.histoire) || 0,
+      feu:      parseInt(d.feu)      || 0,
+      groupes:  parseInt(d.groupes)  || 0,
+      baies:    parseInt(d.baies)    || 0,
+    };
+  });
+  const maxFeu = Math.max(...scores.map(s => s.feu), 0);
+  return scores.map(s => ({
+    ...s,
+    bonusFeu: s.feu === maxFeu && maxFeu > 0 ? 4 : 0,
+    total: s.histoire + s.feu + (s.groupes * 4) + (s.baies * 2) + (s.feu === maxFeu && maxFeu > 0 ? 4 : 0)
+  }));
+}
+
+function updateDewan(pid, field, val) {
+  session.data.scores[pid][field] = val;
+  // Mise à jour sans re-render pour garder le focus
+  const totaux = dewanLiveTotals();
+  session.players.forEach((p, i) => {
+    const t = totaux[i];
+    // Pts histoire
+    const hEl = document.getElementById('dw-pts-histoire-' + p.id);
+    if (hEl) hEl.textContent = '+' + t.histoire + ' pts';
+    // Pts feu
+    const fEl = document.getElementById('dw-pts-feu-' + p.id);
+    if (fEl) fEl.textContent = '+' + t.feu + (t.bonusFeu ? ' +4' : '') + ' pts';
+    // Pts groupes
+    const gEl = document.getElementById('dw-pts-groupes-' + p.id);
+    if (gEl) gEl.textContent = '+' + (t.groupes * 4) + ' pts';
+    // Pts baies
+    const bEl = document.getElementById('dw-pts-baies-' + p.id);
+    if (bEl) bEl.textContent = '+' + (t.baies * 2) + ' pts';
+    // Total
+    const tEl = document.getElementById('dw-total-' + p.id);
+    if (tEl) { tEl.textContent = t.total; tEl.style.color = 'var(--text)'; }
+    // Pill
+    const pEl = document.getElementById('dw-pill-' + p.id);
+    if (pEl) pEl.textContent = t.total;
+  });
+  // Mettre à jour les indicateurs feu (bonus peut changer)
+  totaux.forEach(t => {
+    const fEl = document.getElementById('dw-pts-feu-' + t.id);
+    if (fEl) {
+      const col = t.bonusFeu ? 'var(--gold)' : 'var(--green)';
+      fEl.style.color = col;
+    }
+  });
+}
+
+function renderDewanManche() {
+  const { players, data } = session;
+  const totaux = dewanLiveTotals();
+  const el = document.getElementById('view-game');
+
+  el.innerHTML = `
+    <div class="manche-screen">
+      <!-- HERO -->
+      <div class="game-hero" style="margin-bottom:12px">
+        ${GAMES['dewan']?.img ? `<div class="game-hero-bg" style="background-image:url('${GAMES['dewan'].img}')"></div>` : ''}
+        <div class="game-hero-overlay"></div>
+        <div class="game-hero-content">
+          <div class="game-hero-left">
+            <div class="game-hero-title">Dewan</div>
+            <div class="game-hero-sub">Décompte final · ${players.length} joueurs</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="finishGame('dewan')" style="margin-bottom:2px">Résultats →</button>
+        </div>
+      </div>
+
+      <!-- TOTAUX LIVE -->
+      <div class="totals-bar">
+        ${players.map((p, i) => `<div class="total-pill">
+          <div class="total-pill-name">${p.name}</div>
+          <div class="total-pill-val" style="color:var(--accent)" id="dw-pill-${p.id}">${totaux[i].total}</div>
+        </div>`).join('')}
+      </div>
+
+      <!-- EN-TÊTES JOUEURS -->
+      <div style="display:flex;margin:0 0 6px">
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:6px">
+          ${players.map(p => `<div style="width:72px;text-align:center;font-size:11px;color:var(--text-2);font-weight:500">${p.name}</div>`).join('')}
+        </div>
+      </div>
+
+      <!-- 1. TUILES HISTOIRE -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">Tuiles Histoire</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Points des tuiles validées</div>
+            <div class="agr-label-hint">Somme des pts des tuiles Histoire dont les conditions sont remplies</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => {
+              const v = parseInt(data.scores[p.id].histoire) || 0;
+              return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                  value="${data.scores[p.id].histoire || ''}" placeholder="—"
+                  oninput="updateDewan('${p.id}','histoire',this.value)">
+                <div style="font-size:11px;font-weight:700;color:var(--green)" id="dw-pts-histoire-${p.id}">+${v} pts</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. FEU -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">Feu</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Nombre de symboles Feu</div>
+            <div class="agr-label-hint">1 pt par symbole · +4 pts bonus au joueur qui en a le plus</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => {
+              const t = totaux[i];
+              const col = t.bonusFeu ? 'var(--gold)' : 'var(--green)';
+              return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                  value="${data.scores[p.id].feu || ''}" placeholder="—"
+                  oninput="updateDewan('${p.id}','feu',this.value)">
+                <div style="font-size:11px;font-weight:700;color:${col}" id="dw-pts-feu-${p.id}">+${t.feu}${t.bonusFeu ? ' +4' : ''} pts</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-3);padding:4px 0 0;font-style:italic">
+          Le joueur avec le plus de feu gagne automatiquement +4 pts bonus
+        </div>
+      </div>
+
+      <!-- 3. GROUPES DE CAMPS -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">Groupes de camps</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Nombre de groupes connectés</div>
+            <div class="agr-label-hint">4 pts par groupe d'au moins 2 camps connectés de ta couleur</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => {
+              const g = totaux[i].groupes;
+              return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                  value="${data.scores[p.id].groupes || ''}" placeholder="—"
+                  oninput="updateDewan('${p.id}','groupes',this.value)">
+                <div style="font-size:11px;font-weight:700;color:var(--green)" id="dw-pts-groupes-${p.id}">+${g * 4} pts</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. BAIES -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">Baies</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Total de Baies</div>
+            <div class="agr-label-hint">2 pts par jeton Baie + symboles Baie sur tes cartes glissées</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => {
+              const b = totaux[i].baies;
+              return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                  value="${data.scores[p.id].baies || ''}" placeholder="—"
+                  oninput="updateDewan('${p.id}','baies',this.value)">
+                <div style="font-size:11px;font-weight:700;color:var(--green)" id="dw-pts-baies-${p.id}">+${b * 2} pts</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- TOTAL -->
+      <div class="card" style="background:var(--glass-md)">
+        <div style="display:flex;align-items:center">
+          <div style="flex:1;font-size:14px;font-weight:700;color:var(--accent)">Total</div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => `<div style="width:72px;text-align:center">
+              <div style="font-size:22px;font-weight:700" id="dw-total-${p.id}">${totaux[i].total}</div>
+              <div style="font-size:10px;color:var(--text-2)">${p.name}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="manche-footer">
+        <button class="btn btn-primary btn-full" onclick="finishGame('dewan')">Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
 function renderCurrentManche() {
   if (!session) return;
   if (session.gameId === 'flip7')         renderFlip7Manche();
   if (session.gameId === 'skull_king')    renderSkullKingManche();
   if (session.gameId === 'agricola')      renderAgricolaManche();
   if (session.gameId === 'seven_wonders') renderSevenWondersManche();
+  if (session.gameId === 'dewan')         renderDewanManche();
 }
 
 // ============================================================
@@ -1718,6 +1934,26 @@ function finishGame(gameId) {
       total: AGRICOLA_CATS.flatMap(s => s.items).reduce((sum, item) => {
         return sum + agrScore(item.id, data.scores[p.id][item.id] || 0);
       }, 0)
+    })).sort((a, b) => b.total - a.total);
+  }
+
+  if (gameId === 'dewan') {
+    results = players.map(p => {
+      const d = data.scores[p.id];
+      const histoire = parseInt(d.histoire) || 0;
+      const feu = parseInt(d.feu) || 0;
+      const groupes = parseInt(d.groupes) || 0;
+      const baies = parseInt(d.baies) || 0;
+      // Bonus feu : calculé après pour trouver le max
+      const total_sans_bonus = histoire + feu + (groupes * 4) + (baies * 2);
+      return { ...p, total_sans_bonus, feu, histoire, groupes, baies };
+    });
+    // Bonus +4 pts pour le joueur avec le plus de feu
+    const maxFeu = Math.max(...results.map(r => r.feu));
+    const feuLeaders = results.filter(r => r.feu === maxFeu && maxFeu > 0);
+    results = results.map(r => ({
+      ...r,
+      total: r.total_sans_bonus + (feuLeaders.find(l => l.id === r.id) ? 4 : 0)
     })).sort((a, b) => b.total - a.total);
   }
 
