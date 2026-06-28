@@ -1992,7 +1992,7 @@ function renderWingspanManche() {
                   return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['oiseaux'] || ''}" placeholder="—"
-                      oninput="updateWINGSPAN('oiseaux', '${p.id}', this.value)">
+                      oninput="updateWingspan('oiseaux', '${p.id}', this.value)">
                     <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-oiseaux-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
@@ -2009,7 +2009,7 @@ function renderWingspanManche() {
                   return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['bonus'] || ''}" placeholder="—"
-                      oninput="updateWINGSPAN('bonus', '${p.id}', this.value)">
+                      oninput="updateWingspan('bonus', '${p.id}', this.value)">
                     <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-bonus-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
@@ -2026,7 +2026,7 @@ function renderWingspanManche() {
                   return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['objectifs'] || ''}" placeholder="—"
-                      oninput="updateWINGSPAN('objectifs', '${p.id}', this.value)">
+                      oninput="updateWingspan('objectifs', '${p.id}', this.value)">
                     <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-objectifs-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
@@ -2043,7 +2043,7 @@ function renderWingspanManche() {
                   return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['oeufs'] || ''}" placeholder="—"
-                      oninput="updateWINGSPAN('oeufs', '${p.id}', this.value)">
+                      oninput="updateWingspan('oeufs', '${p.id}', this.value)">
                     <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-oeufs-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
@@ -2060,7 +2060,7 @@ function renderWingspanManche() {
                   return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['nourriture'] || ''}" placeholder="—"
-                      oninput="updateWINGSPAN('nourriture', '${p.id}', this.value)">
+                      oninput="updateWingspan('nourriture', '${p.id}', this.value)">
                     <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-nourriture-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
@@ -2077,7 +2077,7 @@ function renderWingspanManche() {
                   return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['cartes_gl'] || ''}" placeholder="—"
-                      oninput="updateWINGSPAN('cartes_gl', '${p.id}', this.value)">
+                      oninput="updateWingspan('cartes_gl', '${p.id}', this.value)">
                     <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-cartes_gl-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
@@ -2104,19 +2104,19 @@ function renderWingspanManche() {
 // ============================================================
 //  ITSAWONDERFULWORLD
 // ============================================================
-function initItsaWonderfulWorld() {
+function initIAWW() {
   const fields = ['bruts', 'combos', 'generaux', 'financiers'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
   );
 }
 
-function updateItsaWonderfulWorld(field, pid, val) {
+function updateIAWW(field, pid, val) {
   session.data.scores[pid][field] = val;
-  updateItsaWonderfulWorldTotals();
+  updateIAWWTotals();
 }
 
-function updateItsaWonderfulWorldTotals() {
+function updateIAWWTotals() {
   const { players, data } = session;
   const fields = ['bruts', 'combos', 'generaux', 'financiers'];
   players.forEach(p => {
@@ -2134,7 +2134,7 @@ function updateItsaWonderfulWorldTotals() {
   });
 }
 
-function renderItsaWonderfulWorldManche() {
+function renderIAWWManche() {
   const { players, data } = session;
   const el = document.getElementById('view-game');
   const totals = players.map(p => {
