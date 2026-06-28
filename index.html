@@ -738,18 +738,28 @@ const REF = 'ptg_boardgames';
 // ============================================================
 //  GAMES
 // ============================================================
-const GAMES = {
-  flip7:      { id:'flip7',      name:'Flip 7',     emoji:'', desc:'Stop ou encore · 200 pts', maxPlayers: 18,
-    img:'https://catchupgames.com/wp-content/uploads/2022/10/vq1w6Btk.jpg', img_banner:'' },
-  skull_king: { id:'skull_king', name:'Skull King', emoji:'', desc:'Jeu de plis · 10 manches', maxPlayers: 8,
-    img:'https://www.grandpabecksgames.com/cdn/shop/files/SK_Main_1200x1200.jpg?v=1780682436', img_banner:'' },
-  agricola:   { id:'agricola',   name:'Agricola',   emoji:'', desc:'Décompte final', maxPlayers: 5,
+const GAMES_DEF = {
+  agricola:      { id:'agricola',      name:'Agricola',                   emoji:'', desc:'Décompte final', maxPlayers: 5,
     img:'https://cf.geekdo-images.com/saRfGEGSPFHzMtDsECf6xg__opengraph/img/HXClHNWjSWuCJLyLrXYiHJTSbEk=/fit-in/1200x630/filters:strip_icc()/pic6137663.jpg', img_banner:'' },
-  seven_wonders: { id:'seven_wonders', name:'7 Wonders', emoji:'', desc:'Décompte final · 7 catégories', maxPlayers: 7,
+  dewan:         { id:'dewan',         name:'Dewan',                      emoji:'', desc:'Décompte final · 4 catégories', maxPlayers: 4,
     img:'', img_banner:'' },
-  dewan: { id:'dewan', name:'Dewan', emoji:'', desc:'Décompte final · 4 catégories', maxPlayers: 4,
-    img:'', img_banner:'' }
+  flip7:         { id:'flip7',         name:'Flip 7',                     emoji:'', desc:'Stop ou encore · 200 pts', maxPlayers: 18,
+    img:'https://catchupgames.com/wp-content/uploads/2022/10/vq1w6Btk.jpg', img_banner:'' },
+  iaww:          { id:'iaww',          name:"It's a Wonderful World",     emoji:'', desc:'Décompte final · 4 tours', maxPlayers: 5,
+    img:'', img_banner:'' },
+  pillards:      { id:'pillards',      name:'Pillards de la Mer du Nord', emoji:'', desc:'Décompte final', maxPlayers: 4,
+    img:'', img_banner:'' },
+  seven_wonders: { id:'seven_wonders', name:'7 Wonders',                  emoji:'', desc:'Décompte final · 7 catégories', maxPlayers: 7,
+    img:'', img_banner:'' },
+  skull_king:    { id:'skull_king',    name:'Skull King',                  emoji:'', desc:'Jeu de plis · 10 manches', maxPlayers: 8,
+    img:'https://www.grandpabecksgames.com/cdn/shop/files/SK_Main_1200x1200.jpg?v=1780682436', img_banner:'' },
+  wingspan:      { id:'wingspan',      name:'Wingspan',                   emoji:'', desc:'Décompte final · 4 manches', maxPlayers: 5,
+    img:'', img_banner:'' },
 };
+// Tri alphabétique
+const GAMES = Object.fromEntries(
+  Object.entries(GAMES_DEF).sort((a,b) => a[1].name.localeCompare(b[1].name, 'fr'))
+);
 
 // ============================================================
 //  7 WONDERS — calcul science
@@ -982,6 +992,9 @@ function startGame() {
   if (g.id === 'agricola')      initAgricola();
   if (g.id === 'seven_wonders') initSevenWonders();
   if (g.id === 'dewan')         initDewan();
+  if (g.id === 'wingspan')      initWingspan();
+  if (g.id === 'iaww')          initIAWW();
+  if (g.id === 'pillards')      initPillards();
   showView('game');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   renderCurrentManche();
@@ -1825,6 +1838,514 @@ function renderDewanManche() {
     </div>`;
 }
 
+
+// ============================================================
+//  WINGSPAN
+// ============================================================
+function initWingspan() {
+  const fields = ['oiseaux', 'bonus', 'objectifs', 'oeufs', 'nourriture', 'cartes_gl'];
+  session.data.scores = Object.fromEntries(
+    session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
+  );
+}
+
+function updateWingspan(field, pid, val) {
+  session.data.scores[pid][field] = val;
+  updateWingspanTotals();
+}
+
+function updateWingspanTotals() {
+  const { players, data } = session;
+  const fields = ['oiseaux', 'bonus', 'objectifs', 'oeufs', 'nourriture', 'cartes_gl'];
+  players.forEach(p => {
+    // update individual pts labels
+    fields.forEach(f => {
+      const el = document.getElementById('wingspan-pts-' + f + '-' + p.id);
+      if (el) el.textContent = '+' + (parseInt(data.scores[p.id][f]) || 0) + ' pts';
+    });
+    // total
+    const total = fields.reduce((s, f) => s + (parseInt(data.scores[p.id][f]) || 0), 0);
+    const tEl = document.getElementById('wingspan-total-' + p.id);
+    const pEl = document.getElementById('wingspan-pill-' + p.id);
+    if (tEl) tEl.textContent = total;
+    if (pEl) pEl.textContent = total;
+  });
+}
+
+function renderWingspanManche() {
+  const { players, data } = session;
+  const el = document.getElementById('view-game');
+  const totals = players.map(p => {
+    const fields = ['oiseaux', 'bonus', 'objectifs', 'oeufs', 'nourriture', 'cartes_gl'];
+    return fields.reduce((s, f) => s + (parseInt(data.scores[p.id][f]) || 0), 0);
+  });
+
+  el.innerHTML = `
+    <div class="manche-screen">
+      ${gameHeroHTML('wingspan', 'Décompte final · 4 manches',
+        '<button class="btn btn-primary btn-sm" onclick="finishGame(\'wingspan\')">Résultats →</button>')}
+      <div class="totals-bar">
+        ${players.map((p, i) => `<div class="total-pill">
+          <div class="total-pill-name">${p.name}</div>
+          <div class="total-pill-val" style="color:var(--accent)" id="wingspan-pill-${p.id}">${totals[i]}</div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;margin:0 0 6px">
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:6px">
+          ${players.map(p => `<div style="width:72px;text-align:center;font-size:11px;color:var(--text-2);font-weight:500">${p.name}</div>`).join('')}
+        </div>
+      </div>
+      
+          <div class="card" style="margin-bottom:10px">
+            <div class="agr-section-head">Oiseaux</div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">Pts cartes Oiseaux</div>
+                <div class="agr-label-hint">Points indiqués sur tes cartes Oiseau</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['oiseaux']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['oiseaux'] || ''}" placeholder="—"
+                      oninput="updateWINGSPAN('oiseaux', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-oiseaux-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">Carte Bonus</div>
+                <div class="agr-label-hint">Points indiqués sur ta carte Bonus</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['bonus']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['bonus'] || ''}" placeholder="—"
+                      oninput="updateWINGSPAN('bonus', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-bonus-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">Objectifs de fin de manche</div>
+                <div class="agr-label-hint">Pts cumulés des 4 objectifs de manche</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['objectifs']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['objectifs'] || ''}" placeholder="—"
+                      oninput="updateWINGSPAN('objectifs', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-objectifs-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">Œufs sur les cartes</div>
+                <div class="agr-label-hint">1 pt par œuf — compte tes œufs sur toutes tes cartes</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['oeufs']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['oeufs'] || ''}" placeholder="—"
+                      oninput="updateWINGSPAN('oeufs', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-oeufs-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">Nourriture stockée</div>
+                <div class="agr-label-hint">1 pt par jeton Nourriture stocké sur une carte</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['nourriture']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['nourriture'] || ''}" placeholder="—"
+                      oninput="updateWINGSPAN('nourriture', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-nourriture-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">Cartes glissées</div>
+                <div class="agr-label-hint">1 pt par carte glissée sous une carte Oiseau</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['cartes_gl']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['cartes_gl'] || ''}" placeholder="—"
+                      oninput="updateWINGSPAN('cartes_gl', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="wingspan-pts-cartes_gl-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+      <div class="card" style="background:var(--glass-md)">
+        <div style="display:flex;align-items:center">
+          <div style="flex:1;font-size:14px;font-weight:700;color:var(--accent)">Total</div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => `<div style="width:72px;text-align:center">
+              <div style="font-size:22px;font-weight:700" id="wingspan-total-${p.id}">${totals[i]}</div>
+              <div style="font-size:10px;color:var(--text-2)">${p.name}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="manche-footer">
+        <button class="btn btn-primary btn-full" onclick="finishGame('wingspan')">Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+//  ITSAWONDERFULWORLD
+// ============================================================
+function initItsaWonderfulWorld() {
+  const fields = ['bruts', 'combos', 'generaux', 'financiers'];
+  session.data.scores = Object.fromEntries(
+    session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
+  );
+}
+
+function updateItsaWonderfulWorld(field, pid, val) {
+  session.data.scores[pid][field] = val;
+  updateItsaWonderfulWorldTotals();
+}
+
+function updateItsaWonderfulWorldTotals() {
+  const { players, data } = session;
+  const fields = ['bruts', 'combos', 'generaux', 'financiers'];
+  players.forEach(p => {
+    // update individual pts labels
+    fields.forEach(f => {
+      const el = document.getElementById('iaww-pts-' + f + '-' + p.id);
+      if (el) el.textContent = '+' + (parseInt(data.scores[p.id][f]) || 0) + ' pts';
+    });
+    // total
+    const total = fields.reduce((s, f) => s + (parseInt(data.scores[p.id][f]) || 0), 0);
+    const tEl = document.getElementById('iaww-total-' + p.id);
+    const pEl = document.getElementById('iaww-pill-' + p.id);
+    if (tEl) tEl.textContent = total;
+    if (pEl) pEl.textContent = total;
+  });
+}
+
+function renderItsaWonderfulWorldManche() {
+  const { players, data } = session;
+  const el = document.getElementById('view-game');
+  const totals = players.map(p => {
+    const fields = ['bruts', 'combos', 'generaux', 'financiers'];
+    return fields.reduce((s, f) => s + (parseInt(data.scores[p.id][f]) || 0), 0);
+  });
+
+  el.innerHTML = `
+    <div class="manche-screen">
+      ${gameHeroHTML('iaww', 'Décompte final · 4 tours',
+        '<button class="btn btn-primary btn-sm" onclick="finishGame(\'iaww\')">Résultats →</button>')}
+      <div class="totals-bar">
+        ${players.map((p, i) => `<div class="total-pill">
+          <div class="total-pill-name">${p.name}</div>
+          <div class="total-pill-val" style="color:var(--accent)" id="iaww-pill-${p.id}">${totals[i]}</div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;margin:0 0 6px">
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:6px">
+          ${players.map(p => `<div style="width:72px;text-align:center;font-size:11px;color:var(--text-2);font-weight:500">${p.name}</div>`).join('')}
+        </div>
+      </div>
+      
+          <div class="card" style="margin-bottom:10px">
+            <div class="agr-section-head">Points</div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">PV bruts</div>
+                <div class="agr-label-hint">Points de victoire directs sur les cartes construites</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['bruts']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['bruts'] || ''}" placeholder="—"
+                      oninput="updateIAWW('bruts', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="iaww-pts-bruts-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">PV combos</div>
+                <div class="agr-label-hint">Points basés sur le nb de cartes d'un type (cartes combo)</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['combos']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['combos'] || ''}" placeholder="—"
+                      oninput="updateIAWW('combos', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="iaww-pts-combos-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">Généraux</div>
+                <div class="agr-label-hint">1 pt par Général par défaut + bonus cartes — saisir le total</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['generaux']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['generaux'] || ''}" placeholder="—"
+                      oninput="updateIAWW('generaux', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="iaww-pts-generaux-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="agr-row">
+              <div class="agr-label">
+                <div class="agr-label-text">Financiers</div>
+                <div class="agr-label-hint">1 pt par Financier par défaut + bonus cartes — saisir le total</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                ${players.map((p, i) => {
+                  const v = parseInt(data.scores[p.id]['financiers']) || 0;
+                  return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                      value="${data.scores[p.id]['financiers'] || ''}" placeholder="—"
+                      oninput="updateIAWW('financiers', '${p.id}', this.value)">
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" id="iaww-pts-financiers-${p.id}">+${v} pts</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+      <div class="card" style="background:var(--glass-md)">
+        <div style="display:flex;align-items:center">
+          <div style="flex:1;font-size:14px;font-weight:700;color:var(--accent)">Total</div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => `<div style="width:72px;text-align:center">
+              <div style="font-size:22px;font-weight:700" id="iaww-total-${p.id}">${totals[i]}</div>
+              <div style="font-size:10px;color:var(--text-2)">${p.name}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="manche-footer">
+        <button class="btn btn-primary btn-full" onclick="finishGame('iaww')">Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+//  PILLARDS DE LA MER DU NORD
+// ============================================================
+const VALKYRIE_PV = [0,1,2,4,6,9,12,15];
+
+function initPillards() {
+  const fields = ['pv_partie','valkyrie','armement','offrandes','equipage','or','fer','betail'];
+  session.data.scores = Object.fromEntries(
+    session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
+  );
+}
+
+function pillardsTotalForPlayer(d) {
+  const pv_partie = parseInt(d.pv_partie) || 0;
+  const valkyrie  = Math.min(7, parseInt(d.valkyrie) || 0);
+  const armement  = Math.min(10, parseInt(d.armement) || 0);
+  const offrandes = parseInt(d.offrandes) || 0;
+  const equipage  = parseInt(d.equipage)  || 0;
+  const or        = parseInt(d.or)        || 0;
+  const fer       = parseInt(d.fer)       || 0;
+  const betail    = parseInt(d.betail)    || 0;
+  return pv_partie + VALKYRIE_PV[valkyrie] + armement + offrandes + equipage + or + fer + Math.floor(betail/2);
+}
+
+function updatePillards(field, pid, val) {
+  session.data.scores[pid][field] = val;
+  const { players, data } = session;
+  players.forEach(p => {
+    const d = data.scores[p.id];
+    const valk   = Math.min(7, parseInt(d.valkyrie)||0);
+    const arm    = Math.min(10, parseInt(d.armement)||0);
+    const btl    = parseInt(d.betail)||0;
+    // update labels
+    const vEl = document.getElementById('pillards-pts-valkyrie-'+p.id);
+    const aEl = document.getElementById('pillards-pts-armement-'+p.id);
+    const bEl = document.getElementById('pillards-pts-betail-'+p.id);
+    if (vEl) vEl.textContent = '+' + VALKYRIE_PV[valk] + ' pts';
+    if (aEl) aEl.textContent = '+' + arm + ' pts';
+    if (bEl) bEl.textContent = '+' + Math.floor(btl/2) + ' pts';
+    const total = pillardsTotalForPlayer(d);
+    const tEl = document.getElementById('pillards-total-'+p.id);
+    const pEl = document.getElementById('pillards-pill-'+p.id);
+    if (tEl) tEl.textContent = total;
+    if (pEl) pEl.textContent = total;
+  });
+}
+
+function renderPillardsManche() {
+  const { players, data } = session;
+  const el = document.getElementById('view-game');
+  const totals = players.map(p => pillardsTotalForPlayer(data.scores[p.id]));
+
+  el.innerHTML = `
+    <div class="manche-screen">
+      ${gameHeroHTML('pillards', 'Décompte final',
+        '<button class="btn btn-primary btn-sm" onclick="finishGame(\'pillards\')">Résultats →</button>')}
+      <div class="totals-bar">
+        ${players.map((p, i) => `<div class="total-pill">
+          <div class="total-pill-name">${p.name}</div>
+          <div class="total-pill-val" style="color:var(--accent)" id="pillards-pill-${p.id}">${totals[i]}</div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;margin:0 0 6px"><div style="flex:1"></div>
+        <div style="display:flex;gap:6px">
+          ${players.map(p => `<div style="width:72px;text-align:center;font-size:11px;color:var(--text-2);font-weight:500">${p.name}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">Points de partie</div>
+        <div class="agr-row">
+          <div class="agr-label"><div class="agr-label-text">PV en cours de partie</div><div class="agr-label-hint">Score déjà sur ta piste de PV en fin de partie</div></div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                value="${data.scores[p.id].pv_partie || ''}" placeholder="—"
+                oninput="updatePillards('pv_partie','${p.id}',this.value)">
+              <div style="font-size:11px;font-weight:700;color:var(--green)" id="pillards-pts-pv_partie-${p.id}">+${parseInt(data.scores[p.id].pv_partie)||0} pts</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">Pistes (fin de partie)</div>
+        <div class="agr-row">
+          <div class="agr-label"><div class="agr-label-text">Piste de Valkyrie</div><div class="agr-label-hint">Niveau 0-7 → 0|1|2|4|6|9|12|15 pts</div></div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => {
+              const v = Math.min(7, parseInt(data.scores[p.id].valkyrie)||0);
+              return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                  value="${data.scores[p.id].valkyrie || ''}" placeholder="—"
+                  oninput="updatePillards('valkyrie','${p.id}',this.value)">
+                <div style="font-size:11px;font-weight:700;color:var(--green)" id="pillards-pts-valkyrie-${p.id}">+${VALKYRIE_PV[v]} pts</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+        <div class="agr-row">
+          <div class="agr-label"><div class="agr-label-text">Piste d'Armement</div><div class="agr-label-hint">1 pt par niveau (0-10)</div></div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => {
+              const a = Math.min(10, parseInt(data.scores[p.id].armement)||0);
+              return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                  value="${data.scores[p.id].armement || ''}" placeholder="—"
+                  oninput="updatePillards('armement','${p.id}',this.value)">
+                <div style="font-size:11px;font-weight:700;color:var(--green)" id="pillards-pts-armement-${p.id}">+${a} pts</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">Offrandes & Équipage</div>
+        <div class="agr-row">
+          <div class="agr-label"><div class="agr-label-text">Tuiles d'Offrandes</div><div class="agr-label-hint">Somme des PV de tes tuiles révélées</div></div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                value="${data.scores[p.id].offrandes || ''}" placeholder="—"
+                oninput="updatePillards('offrandes','${p.id}',this.value)">
+              <div style="font-size:11px;font-weight:700;color:var(--green)" id="pillards-pts-offrandes-${p.id}">+${parseInt(data.scores[p.id].offrandes)||0} pts</div>
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="agr-row">
+          <div class="agr-label"><div class="agr-label-text">Équipage (Champions)</div><div class="agr-label-hint">PV des Champions et Seigneurs de Guerre recrutés</div></div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                value="${data.scores[p.id].equipage || ''}" placeholder="—"
+                oninput="updatePillards('equipage','${p.id}',this.value)">
+              <div style="font-size:11px;font-weight:700;color:var(--green)" id="pillards-pts-equipage-${p.id}">+${parseInt(data.scores[p.id].equipage)||0} pts</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px">
+        <div class="agr-section-head">Butin</div>
+        ${['or','fer','betail'].map(field => {
+          const labels = {or:'Or', fer:'Fer', betail:'Bétail'};
+          const hints  = {or:'1 pt par cube Or', fer:'1 pt par cube Fer', betail:'2 bétails = 1 pt'};
+          return `<div class="agr-row">
+            <div class="agr-label"><div class="agr-label-text">${labels[field]}</div><div class="agr-label-hint">${hints[field]}</div></div>
+            <div style="display:flex;gap:6px">
+              ${players.map(p => {
+                const v = parseInt(data.scores[p.id][field])||0;
+                const pts = field==='betail' ? Math.floor(v/2) : v;
+                return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                  <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
+                    value="${data.scores[p.id][field] || ''}" placeholder="—"
+                    oninput="updatePillards('${field}','${p.id}',this.value)">
+                  <div style="font-size:11px;font-weight:700;color:var(--green)" id="pillards-pts-${field}-${p.id}">+${pts} pts</div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="card" style="background:var(--glass-md)">
+        <div style="display:flex;align-items:center">
+          <div style="flex:1;font-size:14px;font-weight:700;color:var(--accent)">Total</div>
+          <div style="display:flex;gap:6px">
+            ${players.map((p, i) => `<div style="width:72px;text-align:center">
+              <div style="font-size:22px;font-weight:700" id="pillards-total-${p.id}">${totals[i]}</div>
+              <div style="font-size:10px;color:var(--text-2)">${p.name}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="manche-footer">
+        <button class="btn btn-primary btn-full" onclick="finishGame('pillards')">Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
 function renderCurrentManche() {
   if (!session) return;
   if (session.gameId === 'flip7')         renderFlip7Manche();
@@ -1832,6 +2353,9 @@ function renderCurrentManche() {
   if (session.gameId === 'agricola')      renderAgricolaManche();
   if (session.gameId === 'seven_wonders') renderSevenWondersManche();
   if (session.gameId === 'dewan')         renderDewanManche();
+  if (session.gameId === 'wingspan')      renderWingspanManche();
+  if (session.gameId === 'iaww')          renderIAWWManche();
+  if (session.gameId === 'pillards')      renderPillardsManche();
 }
 
 // ============================================================
@@ -1911,6 +2435,50 @@ function finishGame(gameId) {
         return sum + agrScore(item.id, data.scores[p.id][item.id] || 0);
       }, 0)
     })).sort((a, b) => b.total - a.total);
+  }
+
+  if (gameId === 'wingspan') {
+    results = players.map(p => {
+      const d = data.scores[p.id];
+      const oiseaux   = parseInt(d.oiseaux)   || 0;
+      const bonus     = parseInt(d.bonus)     || 0;
+      const objectifs = parseInt(d.objectifs) || 0;
+      const oeufs     = parseInt(d.oeufs)     || 0;
+      const nourr     = parseInt(d.nourriture)|| 0;
+      const cartes    = parseInt(d.cartes_gl) || 0;
+      const total = oiseaux + bonus + objectifs + oeufs + nourr + cartes;
+      return { ...p, total };
+    }).sort((a,b) => b.total - a.total);
+  }
+
+  if (gameId === 'iaww') {
+    results = players.map(p => {
+      const d = data.scores[p.id];
+      const bruts      = parseInt(d.bruts)      || 0;
+      const combos     = parseInt(d.combos)     || 0;
+      const generaux   = parseInt(d.generaux)   || 0;
+      const financiers = parseInt(d.financiers) || 0;
+      const total = bruts + combos + generaux + financiers;
+      return { ...p, total };
+    }).sort((a,b) => b.total - a.total);
+  }
+
+  if (gameId === 'pillards') {
+    const VALKYRIE_PV = [0,1,2,4,6,9,12,15];
+    results = players.map(p => {
+      const d = data.scores[p.id];
+      const pv_partie  = parseInt(d.pv_partie)  || 0;
+      const valkyrie   = Math.min(7, parseInt(d.valkyrie)   || 0);
+      const armement   = Math.min(10, parseInt(d.armement)  || 0);
+      const offrandes  = parseInt(d.offrandes)  || 0;
+      const equipage   = parseInt(d.equipage)   || 0;
+      const or         = parseInt(d.or)         || 0;
+      const fer        = parseInt(d.fer)        || 0;
+      const betail     = parseInt(d.betail)     || 0;
+      const butin_pv   = or + fer + Math.floor(betail / 2);
+      const total = pv_partie + VALKYRIE_PV[valkyrie] + armement + offrandes + equipage + butin_pv;
+      return { ...p, total };
+    }).sort((a,b) => b.total - a.total);
   }
 
   if (gameId === 'dewan') {
