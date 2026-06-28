@@ -1371,7 +1371,7 @@ function renderSevenWondersManche() {
           const t = totaux[i];
           return `<div class="total-pill">
             <div class="total-pill-name">${p.emoji} ${p.name}</div>
-            <div class="total-pill-val" style="color:var(--accent)">${t.total}</div>
+            <div class="total-pill-val" style="color:var(--accent)" id="sw-pill-${p.id}">${t.total}</div>
           </div>`;
         }).join('')}
       </div>
@@ -1399,8 +1399,8 @@ function renderSevenWondersManche() {
               return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
                 <input type="text" inputmode="numeric" class="agr-field"
                   value="${data.scores[p.id].militaire}" placeholder="0"
-                  onchange="updateSW('${p.id}','militaire',this.value)">
-                <div style="font-size:11px;font-weight:700;color:${col}">${v > 0 ? '+' : ''}${v} pts</div>
+                  oninput="updateSW('${p.id}','militaire',this.value)">
+                <div style="font-size:11px;font-weight:700;color:${col}" id="sw-pts-militaire-${p.id}">${v > 0 ? '+' : ''}${v} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -1422,8 +1422,8 @@ function renderSevenWondersManche() {
               return `<div style="width:72px;display:flex;flex-direction:column;align-items:center;gap:2px">
                 <input type="text" inputmode="numeric" class="agr-field"
                   value="${data.scores[p.id].tresor}" placeholder="0"
-                  onchange="updateSW('${p.id}','tresor',this.value)">
-                <div style="font-size:11px;font-weight:700;color:var(--gold)">+${pts} pt${pts > 1 ? 's' : ''}</div>
+                  oninput="updateSW('${p.id}','tresor',this.value)">
+                <div style="font-size:11px;font-weight:700;color:var(--gold)" id="sw-pts-tresor-${p.id}">+${pts} pt${pts > 1 ? 's' : ''}</div>
               </div>`;
             }).join('')}
           </div>
@@ -1442,7 +1442,7 @@ function renderSevenWondersManche() {
             ${players.map(p => `<div style="width:72px">
               <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                 value="${data.scores[p.id].merveille}" placeholder="0"
-                onchange="updateSW('${p.id}','merveille',this.value)">
+                oninput="updateSW('${p.id}','merveille',this.value)">
             </div>`).join('')}
           </div>
         </div>
@@ -1460,7 +1460,7 @@ function renderSevenWondersManche() {
             ${players.map(p => `<div style="width:72px">
               <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                 value="${data.scores[p.id].civil}" placeholder="0"
-                onchange="updateSW('${p.id}','civil',this.value)">
+                oninput="updateSW('${p.id}','civil',this.value)">
             </div>`).join('')}
           </div>
         </div>
@@ -1478,7 +1478,7 @@ function renderSevenWondersManche() {
             ${players.map(p => `<div style="width:72px">
               <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                 value="${data.scores[p.id].commercial}" placeholder="0"
-                onchange="updateSW('${p.id}','commercial',this.value)">
+                oninput="updateSW('${p.id}','commercial',this.value)">
             </div>`).join('')}
           </div>
         </div>
@@ -1491,7 +1491,7 @@ function renderSevenWondersManche() {
             ${players.map(p => `<div style="width:72px">
               <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                 value="${data.scores[p.id].guildes}" placeholder="0"
-                onchange="updateSW('${p.id}','guildes',this.value)">
+                oninput="updateSW('${p.id}','guildes',this.value)">
             </div>`).join('')}
           </div>
         </div>
@@ -1513,7 +1513,7 @@ function renderSevenWondersManche() {
               ${players.map(p => `<div style="width:72px">
                 <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                   value="${data.scores[p.id][sym]}" placeholder="0"
-                  onchange="updateSW('${p.id}','${sym}',this.value)">
+                  oninput="updateSW('${p.id}','${sym}',this.value)">
               </div>`).join('')}
             </div>
           </div>`;
@@ -1550,29 +1550,37 @@ function renderSevenWondersManche() {
 
 function updateSW(pid, field, val) {
   session.data.scores[pid][field] = val;
-  // Recalcul live pour ce joueur
+  // Mise à jour sans re-render (pour garder le focus clavier)
   const { players, data } = session;
-  players.forEach(p => {
-    const d = data.scores[p.id];
-    const tresorPts = Math.floor((parseInt(d.tresor)||0) / 3);
-    const sciPts = sw7ScienceScore(d.roue, d.compas, d.tablette);
-    const total = (parseInt(d.militaire)||0) + tresorPts +
-      (parseInt(d.merveille)||0) + (parseInt(d.civil)||0) +
-      (parseInt(d.commercial)||0) + (parseInt(d.guildes)||0) + sciPts;
-    const sciEl = document.getElementById('sw-sci-' + p.id);
-    const totEl = document.getElementById('sw-total-' + p.id);
-    if (sciEl) sciEl.textContent = sciPts;
-    if (totEl) totEl.textContent = total;
-  });
-  // Update totals bar
-  const pills = document.querySelectorAll('.total-pill-val');
   players.forEach((p, i) => {
     const d = data.scores[p.id];
-    const total = (parseInt(d.militaire)||0) + Math.floor((parseInt(d.tresor)||0)/3) +
-      (parseInt(d.merveille)||0) + (parseInt(d.civil)||0) +
-      (parseInt(d.commercial)||0) + (parseInt(d.guildes)||0) +
-      sw7ScienceScore(d.roue, d.compas, d.tablette);
-    if (pills[i]) pills[i].textContent = total;
+    const mil    = parseInt(d.militaire)||0;
+    const tresor = Math.floor((parseInt(d.tresor)||0) / 3);
+    const merv   = parseInt(d.merveille)||0;
+    const civil  = parseInt(d.civil)||0;
+    const comm   = parseInt(d.commercial)||0;
+    const guild  = parseInt(d.guildes)||0;
+    const sci    = sw7ScienceScore(d.roue, d.compas, d.tablette);
+    const total  = mil + tresor + merv + civil + comm + guild + sci;
+
+    // Labels pts militaires
+    const milEl = document.getElementById('sw-pts-militaire-' + p.id);
+    if (milEl) {
+      milEl.textContent = (mil > 0 ? '+' : '') + mil + ' pts';
+      milEl.style.color = mil > 0 ? 'var(--green)' : mil < 0 ? 'var(--red)' : 'var(--text-3)';
+    }
+    // Label pts trésor
+    const tresEl = document.getElementById('sw-pts-tresor-' + p.id);
+    if (tresEl) tresEl.textContent = '+' + tresor + ' pt' + (tresor > 1 ? 's' : '');
+    // Science
+    const sciEl = document.getElementById('sw-sci-' + p.id);
+    if (sciEl) sciEl.textContent = sci;
+    // Total
+    const totEl = document.getElementById('sw-total-' + p.id);
+    if (totEl) totEl.textContent = total;
+    // Totals bar
+    const pillEl = document.getElementById('sw-pill-' + p.id);
+    if (pillEl) pillEl.textContent = total;
   });
 }
 
