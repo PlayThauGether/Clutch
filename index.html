@@ -971,7 +971,6 @@ body::before {
 
 <!-- AUDIO -->
 <audio id="bg-audio" loop></audio>
-<audio id="podium-audio"></audio>
 
 <!-- MODAL: thème musical -->
 <div class="modal-overlay" id="modal-theme">
@@ -3908,7 +3907,6 @@ function launchSimplePodium(results) {
 
   document.body.appendChild(overlay);
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  playPodiumMusic();
 
   // Apparition rapide de toutes les cartes
   results.forEach((r, rank) => {
@@ -4075,7 +4073,6 @@ function animateScore(elemId, target, duration, isWinner) {
 function closeReveal() {
   const o = document.getElementById('reveal-overlay');
   if (o) o.remove();
-  stopPodiumMusic();
 }
 
 
@@ -4741,14 +4738,12 @@ function loadUserSessions() {
 //  AUDIO — Thèmes musicaux
 // ============================================================
 let audioTracks  = [];
-let podiumUrl    = '';
 let activeThemeIdx = -1;
 
 function loadAudioConfig() {
   db.ref(REF + '/audio').on('value', snap => {
     const data = snap.val() || {};
     audioTracks = Object.values(data.tracks || {}).sort((a,b) => (a.order||0)-(b.order||0));
-    podiumUrl   = data.podium_url || '';
     // Restaurer le thème sauvegardé, sinon démarrer le premier thème de la liste
     const saved = parseInt(localStorage.getItem('ptg_theme') || '-1');
     if (saved >= 0 && audioTracks[saved]) {
@@ -4826,45 +4821,7 @@ function updateThemeBtn() {
 }
 
 // Musique podium
-function playPodiumMusic() {
-  // Couper complètement l'ambiance pendant le podium
-  const bgAudio = document.getElementById('bg-audio');
-  if (bgAudio) { bgAudio.pause(); }
 
-  const doPlay = (url) => {
-    if (!url) { console.warn('Pas de musique podium configurée'); return; }
-    const pod = document.getElementById('podium-audio');
-    if (!pod) return;
-    pod.src = url;
-    pod.volume = 1.0;
-    pod.loop = false;
-    const playPromise = pod.play();
-    if (playPromise) {
-      playPromise.then(() => console.log('Musique podium démarrée ✓'))
-                 .catch(e => console.warn('Podium audio blocked:', e));
-    }
-  };
-
-  if (podiumUrl) {
-    doPlay(podiumUrl);
-  } else {
-    db.ref(REF + '/audio/podium_url').once('value', snap => {
-      const url = snap.val() || '';
-      podiumUrl = url;
-      doPlay(url);
-    });
-  }
-}
-
-function stopPodiumMusic() {
-  const pod = document.getElementById('podium-audio');
-  if (pod) { pod.pause(); pod.currentTime = 0; }
-  // Reprendre l'ambiance
-  const bgAudio = document.getElementById('bg-audio');
-  if (bgAudio && activeThemeIdx >= 0 && audioTracks[activeThemeIdx]) {
-    bgAudio.play().catch(() => {});
-  }
-}
 
 
 // toggleAudioPlayer / openMusicPicker → alias
@@ -4878,9 +4835,6 @@ function showAdminMusicSection() {
   db.ref(REF + '/audio').once('value', snap => {
     const data   = snap.val() || {};
     const tracks = Object.entries(data.tracks || {});
-    podiumUrl = data.podium_url || '';
-    const pEl = document.getElementById('admin-podium-url');
-    if (pEl) pEl.value = podiumUrl;
     const list = document.getElementById('admin-theme-list');
     if (!list) return;
     if (!tracks.length) {
@@ -4919,10 +4873,6 @@ function deleteTheme(id) {
     .then(() => { toast('Supprimé'); showAdminMusicSection(); loadAudioConfig(); });
 }
 
-function savePodiumMusic(url) {
-  db.ref(REF + '/audio/podium_url').set(url.trim())
-    .then(() => { podiumUrl = url.trim(); toast('Musique podium sauvegardée !'); });
-}
 
 // ============================================================
 //  LANCEUR DE DÉS
