@@ -1045,15 +1045,6 @@ body::before {
       <div class="section-title" style="margin-bottom:6px">Musiques d'ambiance</div>
       <p style="font-size:12px;color:var(--text-2);margin-bottom:14px">Héberge tes MP3 sur GitHub dans /sounds/ et colle l'URL ici. Tu peux en ajouter autant que tu veux.</p>
 
-      <!-- Piste podium -->
-      <div class="admin-settings-card" style="margin-bottom:16px;border-color:rgba(255,214,10,.2)">
-        <div class="admin-settings-title" style="color:var(--gold)">🏆 Musique de podium</div>
-        <div class="admin-label">URL du fichier MP3</div>
-        <input class="field" style="font-size:12px;padding:8px 12px" id="admin-podium-url"
-          placeholder="https://..." value=""
-          onchange="savePodiumMusic(this.value)">
-      </div>
-
       <!-- Thèmes musicaux -->
       <div class="admin-settings-title" style="margin-bottom:8px">Thèmes musicaux</div>
       <div id="admin-theme-list"></div>
@@ -4819,9 +4810,6 @@ function updateThemeBtn() {
     if (lbl) lbl.textContent = 'Thème';
   }
 }
-
-// Musique podium
-
 
 
 // toggleAudioPlayer / openMusicPicker → alias
