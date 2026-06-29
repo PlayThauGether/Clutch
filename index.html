@@ -18,7 +18,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
   --glass:        rgba(255,255,255,0.07);
@@ -66,7 +66,7 @@ body::before {
 /* ---- HEADER ---- */
 .header { padding: max(env(safe-area-inset-top),16px) 20px 0; flex-shrink: 0; }
 .header-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 10px; }
-.logo { font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+.logo { font-size: 17px; font-weight: 700; letter-spacing: .06em; font-family: 'Bebas Neue', sans-serif; }
 .logo-dot { color: var(--accent); }
 
 /* ---- NAV ---- */
@@ -80,7 +80,7 @@ body::before {
 .nav-tab {
   flex: 1; padding: 7px 4px;
   background: none; border: none; cursor: pointer;
-  font-family: inherit; font-size: 11px; font-weight: 500;
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: .08em;
   color: var(--text-2); border-radius: 11px;
   transition: all .2s;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -99,8 +99,9 @@ body::before {
 
 /* ---- SECTION TITLE ---- */
 .section-title {
-  font-size: 12px; font-weight: 600; letter-spacing: .06em;
+  font-size: 13px; font-weight: 600; letter-spacing: .12em;
   text-transform: uppercase; color: var(--text-2);
+  font-family: 'Bebas Neue', sans-serif;
   margin: 18px 0 8px;
 }
 
@@ -143,7 +144,7 @@ body::before {
 }
 .game-card-content { position: relative; z-index: 1; }
 .game-emoji { display: none; }
-.game-name { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+.game-name { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: .06em; font-family: 'Bebas Neue', sans-serif; }
 .game-desc { font-size: 9px; color: rgba(255,255,255,.55); margin-top: 3px; }
 .game-max { font-size: 9px; color: rgba(255,255,255,.35); margin-top: 2px; }
 
@@ -215,7 +216,7 @@ body::before {
   display: flex; align-items: flex-end; justify-content: space-between;
 }
 .game-hero-left { }
-.game-hero-title { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -.02em; }
+.game-hero-title { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: .06em; font-family: 'Bebas Neue', sans-serif; }
 .game-hero-sub { font-size: 12px; color: rgba(255,255,255,.55); margin-top: 2px; }
 .game-hero-nav { display: flex; align-items: center; gap: 7px; padding-bottom: 2px; }
 .game-hero-btn {
@@ -341,8 +342,9 @@ body::before {
 
 /* ---- AGRICOLA ---- */
 .agr-section-head {
-  font-size: 11px; font-weight: 600; letter-spacing: .07em;
+  font-size: 14px; font-weight: 400; letter-spacing: .1em;
   text-transform: uppercase; color: var(--accent);
+  font-family: 'Bebas Neue', sans-serif;
   padding: 10px 0 6px;
   border-bottom: 1px solid rgba(255,255,255,.1);
   margin-bottom: 2px;
@@ -428,7 +430,7 @@ body::before {
   border-radius: var(--r-lg); padding: 16px; text-align: center;
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
 }
-.stat-val { font-size: 28px; font-weight: 700; color: var(--accent); letter-spacing: -.02em; }
+.stat-val { font-size: 32px; font-weight: 700; color: var(--accent); letter-spacing: .04em; font-family: 'Bebas Neue', sans-serif; }
 .stat-label { font-size: 12px; color: var(--text-2); margin-top: 3px; }
 
 /* ---- TOAST ---- */
@@ -475,8 +477,20 @@ body::before {
 .empty-icon { font-size: 36px; margin-bottom: 10px; }
 
 /* ---- CONFETTI ---- */
-@keyframes confettiFall { 0% { transform:translateY(-10px) rotate(0deg); opacity:1; } 100% { transform:translateY(70px) rotate(540deg); opacity:0; } }
-.confetti { position:fixed; width:7px; height:7px; border-radius:2px; pointer-events:none; z-index:9997; animation:confettiFall .9s ease-in forwards; }
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+}
+.confetti {
+  position: fixed;
+  top: -12px;
+  width: 9px; height: 9px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: confettiFall linear forwards;
+}
 
 /* ---- MANCHE HISTORY PANEL ---- */
 .manches-panel { display: flex; flex-direction: column; gap: 8px; }
@@ -499,7 +513,11 @@ body::before {
 /* ---- REVEAL SCREEN ---- */
 .reveal-overlay {
   position: fixed; inset: 0; z-index: 2000;
-  background: #000;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% -10%, rgba(59,96,170,.45) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(30,60,120,.35) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 80% at 50% 110%, rgba(20,40,90,.5) 0%, transparent 60%),
+    linear-gradient(180deg, #0d1117 0%, #0f1629 40%, #0d1630 100%);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 24px; overflow-y: auto;
@@ -546,6 +564,154 @@ body::before {
   display: flex; gap: 10px; width: 100%; max-width: 420px;
 }
 .reveal-buttons.show { opacity: 1; }
+.rev-vcard { cursor: default; }
+.rev-winner { box-shadow: 0 0 0 rgba(255,214,10,0); transition: opacity .5s ease, transform .5s ease, box-shadow .6s ease !important; }
+
+/* ---- AUDIO PLAYER ---- */
+.audio-player {
+  position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+  z-index: 900; width: calc(100% - 32px); max-width: 420px;
+  background: rgba(13,22,41,.97); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 20px; padding: 14px 16px;
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 40px rgba(0,0,0,.5);
+  display: none; flex-direction: column; gap: 10px;
+}
+.audio-player.open { display: flex; }
+.audio-track-name {
+  font-family: 'Bebas Neue', sans-serif; font-size: 16px;
+  letter-spacing: .06em; color: var(--text); text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.audio-controls { display: flex; align-items: center; gap: 10px; justify-content: center; }
+.audio-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--glass-md); border: 1px solid var(--border);
+  color: var(--text); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; flex-shrink: 0;
+}
+.audio-btn:hover { background: var(--glass-hi); border-color: var(--accent); }
+.audio-btn.play-btn {
+  width: 44px; height: 44px; font-size: 20px;
+  background: var(--accent); border-color: var(--accent); color: #0a1628;
+}
+.audio-btn.play-btn:hover { opacity: .85; }
+.audio-volume {
+  display: flex; align-items: center; gap: 8px;
+}
+.audio-vol-icon { font-size: 14px; color: var(--text-2); }
+.audio-vol-slider { flex: 1; accent-color: var(--accent); }
+.audio-tracks-list {
+  max-height: 160px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 4px;
+  border-top: 1px solid rgba(255,255,255,.08); padding-top: 8px;
+}
+.audio-track-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 10px; cursor: pointer;
+  transition: background .15s;
+}
+.audio-track-item:hover { background: var(--glass-md); }
+.audio-track-item.active { background: rgba(100,210,255,.1); }
+.audio-track-item.active .audio-track-item-name { color: var(--accent); }
+.audio-track-item-ico { font-size: 14px; color: var(--text-2); }
+.audio-track-item-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.audio-header-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: rgba(255,255,255,.5);
+  padding: 4px; transition: color .2s;
+}
+.audio-header-btn:hover { color: var(--text); }
+/* Bouton music dans le header */
+.music-header-btn {
+  background: var(--glass-md); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 12px;
+  color: var(--text-2); font-size: 13px; cursor: pointer;
+  font-family: inherit; transition: all .2s; display: flex;
+  align-items: center; gap: 5px;
+}
+.music-header-btn:hover { border-color: var(--accent); color: var(--accent); }
+.music-header-btn.playing { border-color: var(--accent); color: var(--accent); background: rgba(100,210,255,.08); }
+
+/* ---- AUDIO PLAYER ---- */
+.audio-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 400;
+  background: rgba(13,22,41,.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding: 10px 16px 10px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  display: none;
+  align-items: center; gap: 10px;
+  transition: transform .3s ease;
+}
+.audio-bar.visible { display: flex; }
+.audio-track-name {
+  flex: 1; font-size: 12px; font-weight: 600;
+  color: var(--text); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  min-width: 0;
+}
+.audio-track-sub { font-size: 10px; color: var(--text-2); }
+.audio-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--glass-md); border: 1px solid var(--border);
+  color: var(--text); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; flex-shrink: 0;
+}
+.audio-btn:hover { background: var(--glass-hi); border-color: var(--accent); }
+.audio-btn.playing { background: rgba(100,210,255,.15); border-color: var(--accent); color: var(--accent); }
+.audio-volume { width: 64px; accent-color: var(--accent); flex-shrink: 0; }
+
+/* ---- DÉS ---- */
+@keyframes diceRoll {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-15deg) scale(1.1); }
+  40%  { transform: rotate(20deg) scale(0.95); }
+  60%  { transform: rotate(-10deg) scale(1.08); }
+  80%  { transform: rotate(8deg) scale(0.98); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+@keyframes diceAppear {
+  0%   { opacity:0; transform: scale(0.5) rotate(-20deg); }
+  60%  { transform: scale(1.15) rotate(5deg); }
+  100% { opacity:1; transform: scale(1) rotate(0deg); }
+}
+.dice-face {
+  width: 72px; height: 72px;
+  background: var(--glass-md);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; font-weight: 700;
+  color: var(--text);
+  position: relative;
+  transition: border-color .3s;
+}
+.dice-face.rolling {
+  animation: diceRoll .6s ease-in-out;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dice-face.landed {
+  animation: diceAppear .4s cubic-bezier(.175,.885,.32,1.275) forwards;
+  border-color: var(--accent);
+  color: var(--text);
+}
+.dice-face .dice-type-label {
+  position: absolute; bottom: 4px; right: 6px;
+  font-size: 9px; font-family: inherit; color: var(--text-3);
+  letter-spacing: .05em;
+}
+.dice-nav-btn.active {
+  background: var(--glass-hi);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 /* ---- COUNTER ---- */
   background: var(--glass); border: 1px solid var(--border);
@@ -646,6 +812,9 @@ body::before {
         <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.3);border-radius:20px;padding:6px 12px;color:#64D2FF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
           Installer
         </button>
+        <button class="music-header-btn" id="music-toggle-btn" onclick="toggleAudioPlayer()">
+          ♪ <span id="music-btn-label">Musique</span>
+        </button>
         <div id="auth-btn-wrap">
           <button id="auth-btn" onclick="toggleAuth()"
             style="background:var(--glass-md);border:1px solid var(--border);border-radius:20px;padding:6px 13px;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s">
@@ -670,6 +839,9 @@ body::before {
       </button>
       <button class="nav-tab" onclick="showView('counter')">
         <span class="ti"></span><span>Compteur</span>
+      </button>
+      <button class="nav-tab" onclick="showView('dice')">
+        <span class="ti">🎲</span><span>Dés</span>
       </button>
     </div>
   </nav>
@@ -748,11 +920,107 @@ body::before {
       </div>
     </section>
 
+    <!-- VUE DÉS -->
+    <section class="view" id="view-dice">
+      <div class="section-title" style="margin-bottom:16px">Lanceur de dés</div>
+
+      <!-- Choix du type de dé -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2);margin-bottom:8px">Type de dé</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="dice-type-btns">
+          ${['D4','D6','D8','D10','D12','D20'].map(d =>
+            `<button id="dice-btn-${d}" onclick="selectDice('${d}')"
+              class="btn btn-glass" style="flex:1;min-width:60px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em">
+              ${d}
+            </button>`
+          ).join('')}
+        </div>
+      </div>
+
+      <!-- Nombre de dés -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2);margin-bottom:8px">Nombre de dés</div>
+        <div style="display:flex;gap:8px">
+          ${[1,2,3,4,5,6].map(n =>
+            `<button id="dice-count-${n}" onclick="selectDiceCount(${n})"
+              class="btn btn-glass" style="flex:1;font-size:15px;font-weight:700">
+              ${n}
+            </button>`
+          ).join('')}
+        </div>
+      </div>
+
+      <!-- Zone de lancer -->
+      <div id="dice-result-zone" style="min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div id="dice-faces" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:16px"></div>
+        <div id="dice-total" style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--accent);letter-spacing:.04em;display:none"></div>
+      </div>
+
+      <!-- Bouton lancer -->
+      <button class="btn btn-primary btn-full" onclick="rollDice()" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.08em">
+        🎲 Lancer
+      </button>
+    </section>
+
   </main>
+</div>
+
+<!-- AUDIO BAR (fixée en bas) -->
+<div class="audio-bar" id="audio-bar">
+  <button class="audio-btn" id="audio-prev-btn" onclick="audioPrev()" title="Piste précédente">⏮</button>
+  <button class="audio-btn" id="audio-play-btn" onclick="audioToggle()" title="Play/Pause">▶</button>
+  <button class="audio-btn" id="audio-next-btn" onclick="audioNext()" title="Piste suivante">⏭</button>
+  <div style="flex:1;min-width:0">
+    <div class="audio-track-name" id="audio-track-name">Aucune piste</div>
+    <div class="audio-track-sub" id="audio-track-sub">Ambiance</div>
+  </div>
+  <input type="range" class="audio-volume" id="audio-volume" min="0" max="1" step="0.05" value="0.5" oninput="audioSetVolume(this.value)" title="Volume">
+  <button class="audio-btn" onclick="openMusicPicker()" title="Choisir une piste">🎵</button>
+  <button class="audio-btn" onclick="closeAudioBar()" title="Fermer">✕</button>
+</div>
+
+<!-- MODAL: choix de piste -->
+<div class="modal-overlay" id="modal-music">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎵 Musique d'ambiance</div>
+    <div id="music-track-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-glass btn-sm" onclick="closeModal('modal-music')">Fermer</button>
+    </div>
+  </div>
 </div>
 
 <!-- ETOILE CACHEE ADMIN -->
 <div id="star-trigger" onclick="starClick()" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.08);cursor:pointer;user-select:none;z-index:500;padding:8px 16px">⭐</div>
+
+<!-- PLAYER AUDIO FLOTTANT -->
+<audio id="bg-audio" loop></audio>
+<audio id="podium-audio" src=""></audio>
+
+<div class="audio-player" id="audio-player">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)">Musique d'ambiance</div>
+    <button class="audio-header-btn" onclick="toggleAudioPlayer()">✕</button>
+  </div>
+  <div class="audio-track-name" id="audio-track-name">Aucune piste sélectionnée</div>
+  <div class="audio-controls">
+    <button class="audio-btn" onclick="prevTrack()" title="Précédent">⏮</button>
+    <button class="audio-btn play-btn" id="audio-play-btn" onclick="togglePlay()">▶</button>
+    <button class="audio-btn" onclick="nextTrack()" title="Suivant">⏭</button>
+  </div>
+  <div class="audio-volume">
+    <span class="audio-vol-icon">🔈</span>
+    <input type="range" class="audio-vol-slider" id="audio-vol" min="0" max="1" step="0.05" value="0.5"
+      oninput="setVolume(this.value)">
+    <span class="audio-vol-icon">🔊</span>
+  </div>
+  <div class="audio-tracks-list" id="audio-tracks-list">
+    <div style="font-size:12px;color:var(--text-3);text-align:center;padding:8px">
+      Aucune piste — ajoute des musiques dans l'admin
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: login admin -->
 <div class="modal-overlay" id="modal-login">
@@ -784,17 +1052,22 @@ body::before {
       </div>
     </div>
 
-    <!-- 2 boutons sections -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">
+    <!-- 3ème bouton : Musiques -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:24px" id="admin-tabs-wrap">
       <button onclick="showAdminSection('images')" id="admin-tab-images"
-        class="btn btn-primary" style="flex-direction:column;gap:4px;padding:14px;border-radius:var(--r-lg)">
-        <span style="font-size:18px">🖼️</span>
-        <span style="font-size:13px">Images des jeux</span>
+        class="btn btn-primary" style="flex-direction:column;gap:4px;padding:12px;border-radius:var(--r-lg)">
+        <span style="font-size:16px">🖼️</span>
+        <span style="font-size:11px">Images</span>
       </button>
       <button onclick="showAdminSection('games')" id="admin-tab-games"
-        class="btn btn-glass" style="flex-direction:column;gap:4px;padding:14px;border-radius:var(--r-lg)">
-        <span style="font-size:18px">⚙️</span>
-        <span style="font-size:13px">Gérer les jeux</span>
+        class="btn btn-glass" style="flex-direction:column;gap:4px;padding:12px;border-radius:var(--r-lg)">
+        <span style="font-size:16px">⚙️</span>
+        <span style="font-size:11px">Jeux</span>
+      </button>
+      <button onclick="showAdminSection('music')" id="admin-tab-music"
+        class="btn btn-glass" style="flex-direction:column;gap:4px;padding:12px;border-radius:var(--r-lg)">
+        <span style="font-size:16px">🎵</span>
+        <span style="font-size:11px">Musiques</span>
       </button>
     </div>
 
@@ -803,6 +1076,42 @@ body::before {
       <div class="section-title" style="margin-bottom:10px">Images des jeux</div>
       <p style="font-size:12px;color:var(--text-2);margin-bottom:14px">Colle les URLs d'images. Sauvegardées automatiquement sur Firebase.</p>
       <div id="admin-games-list"></div>
+    </div>
+
+    <!-- Section Musiques -->
+    <div id="admin-section-music" style="display:none">
+      <div class="section-title" style="margin-bottom:6px">Musiques d'ambiance</div>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:14px">Héberge tes MP3 sur GitHub dans /sounds/ et colle l'URL ici. Tu peux en ajouter autant que tu veux.</p>
+
+      <!-- Piste podium -->
+      <div class="admin-settings-card" style="margin-bottom:16px;border-color:rgba(255,214,10,.2)">
+        <div class="admin-settings-title" style="color:var(--gold)">🏆 Musique de podium</div>
+        <div class="admin-label">URL du fichier MP3</div>
+        <input class="field" style="font-size:12px;padding:8px 12px" id="admin-podium-url"
+          placeholder="https://..." value=""
+          onchange="savePodiumMusic(this.value)">
+      </div>
+
+      <!-- Pistes d'ambiance -->
+      <div class="admin-settings-title" style="margin-bottom:8px">Pistes d'ambiance</div>
+      <div id="admin-tracks-list"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:10px" onclick="addTrack()">+ Ajouter une piste</button>
+    </div>
+
+    <!-- Section Musiques -->
+    <div id="admin-section-music" style="display:none">
+      <div class="section-title" style="margin-bottom:10px">Musiques</div>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:14px">Gère les pistes audio. Héberge tes MP3 sur GitHub dans /sounds/ puis colle l'URL ici.</p>
+      <div id="admin-music-list"></div>
+      <button class="btn btn-glass btn-sm" onclick="adminAddTrack()" style="margin-top:10px;width:100%">+ Ajouter une piste</button>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div class="admin-label" style="margin-bottom:6px">Musique du podium</div>
+        <div class="agr-label-hint" style="margin-bottom:8px">Se déclenche automatiquement à la révélation des résultats</div>
+        <input class="field" style="font-size:12px;padding:8px 12px;width:100%"
+          placeholder="URL MP3 musique podium..."
+          id="admin-podium-url"
+          onchange="savePodiumTrack(this.value)">
+      </div>
     </div>
 
     <!-- Section Gérer les jeux -->
@@ -1038,6 +1347,7 @@ function showView(name) {
   if (name === 'history') renderHistory();
   if (name === 'stats')   renderStats();
   if (name === 'counter') renderCounters();
+  if (name === 'dice')    initDiceView();
 }
 
 // ============================================================
@@ -1435,7 +1745,7 @@ function renderAgricolaManche() {
                       value="${qty || ''}"
                       placeholder="—"
                       onchange="updateAgricola('${p.id}','${item.id}',this.value)">
-                    <div style="font-size:11px;font-weight:700;color:${ptsCol} score-pts-label" id="agr-pts-${p.id}-${item.id}">
+                    <div style="font-size:11px;font-weight:700;color:${ptsCol}" class="score-pts-label" id="agr-pts-${p.id}-${item.id}">
                       ${pts > 0 ? '+' : ''}${pts} pt${Math.abs(pts) > 1 ? 's' : ''}
                     </div>
                   </div>`;
@@ -1564,7 +1874,7 @@ function renderSevenWondersManche() {
                 <input type="text" inputmode="numeric" class="agr-field"
                   value="${data.scores[p.id].militaire || ''}" placeholder="—"
                   oninput="updateSW('${p.id}','militaire',this.value)">
-                <div style="font-size:11px;font-weight:700;color:${col} score-pts-label" id="sw-pts-militaire-${p.id}">${v > 0 ? '+' : ''}${v} pts</div>
+                <div style="font-size:11px;font-weight:700;color:${col}" class="score-pts-label" id="sw-pts-militaire-${p.id}">${v > 0 ? '+' : ''}${v} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -1587,7 +1897,7 @@ function renderSevenWondersManche() {
                 <input type="text" inputmode="numeric" class="agr-field"
                   value="${data.scores[p.id].tresor || ''}" placeholder="—"
                   oninput="updateSW('${p.id}','tresor',this.value)">
-                <div style="font-size:11px;font-weight:700;color:var(--gold) score-pts-label" id="sw-pts-tresor-${p.id}">+${pts} pt${pts > 1 ? 's' : ''}</div>
+                <div style="font-size:11px;font-weight:700;color:var(--gold)" class="score-pts-label" id="sw-pts-tresor-${p.id}">+${pts} pt${pts > 1 ? 's' : ''}</div>
               </div>`;
             }).join('')}
           </div>
@@ -1790,7 +2100,7 @@ function gameHeroHTML(gameId, subtitle, navHTML) {
 //  DEWAN
 // ============================================================
 function initDewan() {
-  const fields = ['histoire', 'feu', 'groupes', 'baies'];
+  const fields = ['histoire', 'feu', 'groupes', 'baies', 'terrain'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
   );
@@ -1892,7 +2202,7 @@ function renderDewanManche() {
                 <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                   value="${data.scores[p.id].histoire || ''}" placeholder="—"
                   oninput="updateDewan('${p.id}','histoire',this.value)">
-                <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="dw-pts-histoire-${p.id}">+${v} pts</div>
+                <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="dw-pts-histoire-${p.id}">+${v} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -1915,7 +2225,7 @@ function renderDewanManche() {
                 <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                   value="${data.scores[p.id].feu || ''}" placeholder="—"
                   oninput="updateDewan('${p.id}','feu',this.value)">
-                <div style="font-size:11px;font-weight:700;color:${col} score-pts-label" id="dw-pts-feu-${p.id}">+${t.feu}${t.bonusFeu ? ' +4' : ''} pts</div>
+                <div style="font-size:11px;font-weight:700;color:${col}" class="score-pts-label" id="dw-pts-feu-${p.id}">+${t.feu}${t.bonusFeu ? ' +4' : ''} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -1940,7 +2250,7 @@ function renderDewanManche() {
                 <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                   value="${data.scores[p.id].groupes || ''}" placeholder="—"
                   oninput="updateDewan('${p.id}','groupes',this.value)">
-                <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="dw-pts-groupes-${p.id}">+${g * 4} pts</div>
+                <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="dw-pts-groupes-${p.id}">+${g * 4} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -1962,7 +2272,7 @@ function renderDewanManche() {
                 <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                   value="${data.scores[p.id].baies || ''}" placeholder="—"
                   oninput="updateDewan('${p.id}','baies',this.value)">
-                <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="dw-pts-baies-${p.id}">+${b * 2} pts</div>
+                <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="dw-pts-baies-${p.id}">+${b * 2} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -1982,6 +2292,23 @@ function renderDewanManche() {
         </div>
       </div>
 
+      <!-- Départage -->
+      <div class="card" style="margin-bottom:10px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)">
+        <div class="agr-section-head" style="color:var(--text-2)">Départage (égalité)</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Cartes Terrain en main</div>
+            <div class="agr-label-hint">Sert uniquement en cas d'égalité — ne compte pas dans le total</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px;text-align:center">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%;color:var(--text-2)"
+                value="${data.scores[p.id].terrain || ''}" placeholder="—"
+                oninput="updateDewan('${p.id}','terrain',this.value)">
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
       <div class="manche-footer">
         <button class="btn btn-primary btn-full" onclick="finishGame('dewan')">Voir les résultats</button>
       </div>
@@ -2061,7 +2388,7 @@ function renderWingspanManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['oiseaux'] || ''}" placeholder="—"
                       oninput="updateWingspan('oiseaux', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="wingspan-pts-oiseaux-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="wingspan-pts-oiseaux-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2078,7 +2405,7 @@ function renderWingspanManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['bonus'] || ''}" placeholder="—"
                       oninput="updateWingspan('bonus', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="wingspan-pts-bonus-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="wingspan-pts-bonus-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2095,7 +2422,7 @@ function renderWingspanManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['objectifs'] || ''}" placeholder="—"
                       oninput="updateWingspan('objectifs', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="wingspan-pts-objectifs-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="wingspan-pts-objectifs-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2112,7 +2439,7 @@ function renderWingspanManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['oeufs'] || ''}" placeholder="—"
                       oninput="updateWingspan('oeufs', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="wingspan-pts-oeufs-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="wingspan-pts-oeufs-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2129,7 +2456,7 @@ function renderWingspanManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['nourriture'] || ''}" placeholder="—"
                       oninput="updateWingspan('nourriture', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="wingspan-pts-nourriture-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="wingspan-pts-nourriture-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2146,7 +2473,7 @@ function renderWingspanManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['cartes_gl'] || ''}" placeholder="—"
                       oninput="updateWingspan('cartes_gl', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="wingspan-pts-cartes_gl-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="wingspan-pts-cartes_gl-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2173,7 +2500,7 @@ function renderWingspanManche() {
 //  ITSAWONDERFULWORLD
 // ============================================================
 function initIAWW() {
-  const fields = ['bruts', 'combos', 'generaux', 'financiers'];
+  const fields = ['bruts', 'combos', 'generaux', 'financiers', 'cartes_emp'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
   );
@@ -2186,7 +2513,7 @@ function updateIAWW(field, pid, val) {
 
 function updateIAWWTotals() {
   const { players, data } = session;
-  const fields = ['bruts', 'combos', 'generaux', 'financiers'];
+  const fields = ['bruts', 'combos', 'generaux', 'financiers', 'cartes_emp'];
   players.forEach(p => {
     // update individual pts labels
     fields.forEach(f => {
@@ -2206,7 +2533,7 @@ function renderIAWWManche() {
   const { players, data } = session;
   const el = document.getElementById('view-game');
   const totals = players.map(p => {
-    const fields = ['bruts', 'combos', 'generaux', 'financiers'];
+    const fields = ['bruts', 'combos', 'generaux', 'financiers', 'cartes_emp'];
     return fields.reduce((s, f) => s + (parseInt(data.scores[p.id][f]) || 0), 0);
   });
 
@@ -2241,7 +2568,7 @@ function renderIAWWManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['bruts'] || ''}" placeholder="—"
                       oninput="updateIAWW('bruts', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="iaww-pts-bruts-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="iaww-pts-bruts-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2258,7 +2585,7 @@ function renderIAWWManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['combos'] || ''}" placeholder="—"
                       oninput="updateIAWW('combos', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="iaww-pts-combos-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="iaww-pts-combos-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2275,7 +2602,7 @@ function renderIAWWManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['generaux'] || ''}" placeholder="—"
                       oninput="updateIAWW('generaux', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="iaww-pts-generaux-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="iaww-pts-generaux-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2292,7 +2619,7 @@ function renderIAWWManche() {
                     <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                       value="${data.scores[p.id]['financiers'] || ''}" placeholder="—"
                       oninput="updateIAWW('financiers', '${p.id}', this.value)">
-                    <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="iaww-pts-financiers-${p.id}">+${v} pts</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="iaww-pts-financiers-${p.id}">+${v} pts</div>
                   </div>`;
                 }).join('')}
               </div>
@@ -2305,6 +2632,23 @@ function renderIAWWManche() {
             ${players.map((p, i) => `<div style="width:72px;text-align:center">
               <div style="font-size:22px;font-weight:700" id="iaww-total-${p.id}">${totals[i]}</div>
               <div style="font-size:10px;color:var(--text-2)">${p.name}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <!-- Départage -->
+      <div class="card" style="margin-bottom:10px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)">
+        <div class="agr-section-head" style="color:var(--text-2)">Départage (égalité)</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Cartes dans ton Empire</div>
+            <div class="agr-label-hint">Nombre total de cartes construites — départage uniquement</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%;color:var(--text-2)"
+                value="${data.scores[p.id].cartes_emp || ''}" placeholder="—"
+                oninput="updateIAWW('cartes_emp','${p.id}',this.value)">
             </div>`).join('')}
           </div>
         </div>
@@ -2392,7 +2736,7 @@ function renderPillardsManche() {
               <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                 value="${data.scores[p.id].pv_partie || ''}" placeholder="—"
                 oninput="updatePillards('pv_partie','${p.id}',this.value)">
-              <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="pillards-pts-pv_partie-${p.id}">+${parseInt(data.scores[p.id].pv_partie)||0} pts</div>
+              <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="pillards-pts-pv_partie-${p.id}">+${parseInt(data.scores[p.id].pv_partie)||0} pts</div>
             </div>`).join('')}
           </div>
         </div>
@@ -2409,7 +2753,7 @@ function renderPillardsManche() {
                 <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                   value="${data.scores[p.id].valkyrie || ''}" placeholder="—"
                   oninput="updatePillards('valkyrie','${p.id}',this.value)">
-                <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="pillards-pts-valkyrie-${p.id}">+${VALKYRIE_PV[v]} pts</div>
+                <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="pillards-pts-valkyrie-${p.id}">+${VALKYRIE_PV[v]} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -2423,7 +2767,7 @@ function renderPillardsManche() {
                 <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                   value="${data.scores[p.id].armement || ''}" placeholder="—"
                   oninput="updatePillards('armement','${p.id}',this.value)">
-                <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="pillards-pts-armement-${p.id}">+${a} pts</div>
+                <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="pillards-pts-armement-${p.id}">+${a} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -2439,7 +2783,7 @@ function renderPillardsManche() {
               <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                 value="${data.scores[p.id].offrandes || ''}" placeholder="—"
                 oninput="updatePillards('offrandes','${p.id}',this.value)">
-              <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="pillards-pts-offrandes-${p.id}">+${parseInt(data.scores[p.id].offrandes)||0} pts</div>
+              <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="pillards-pts-offrandes-${p.id}">+${parseInt(data.scores[p.id].offrandes)||0} pts</div>
             </div>`).join('')}
           </div>
         </div>
@@ -2450,7 +2794,7 @@ function renderPillardsManche() {
               <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                 value="${data.scores[p.id].equipage || ''}" placeholder="—"
                 oninput="updatePillards('equipage','${p.id}',this.value)">
-              <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="pillards-pts-equipage-${p.id}">+${parseInt(data.scores[p.id].equipage)||0} pts</div>
+              <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="pillards-pts-equipage-${p.id}">+${parseInt(data.scores[p.id].equipage)||0} pts</div>
             </div>`).join('')}
           </div>
         </div>
@@ -2471,7 +2815,7 @@ function renderPillardsManche() {
                   <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                     value="${data.scores[p.id][field] || ''}" placeholder="—"
                     oninput="updatePillards('${field}','${p.id}',this.value)">
-                  <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="pillards-pts-${field}-${p.id}">+${pts} pts</div>
+                  <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="pillards-pts-${field}-${p.id}">+${pts} pts</div>
                 </div>`;
               }).join('')}
             </div>
@@ -2502,7 +2846,7 @@ function renderPillardsManche() {
 const TERREUR_TABLE = [0,-1,-3,-6,-10,-15,-21];
 
 function initMaraudeurs() {
-  const fields = ['gloire','artefacts','butin','ferme','mur','bastion','propheties','terreur'];
+  const fields = ['gloire','artefacts','butin','ferme','mur','bastion','propheties','terreur','faveur'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f,'']))])
   );
@@ -2620,7 +2964,7 @@ function renderMaraudeursManche() {
                   <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                     value="${data.scores[p.id][item.id] || ''}" placeholder="—"
                     oninput="updateMaraudeurs('${item.id}','${p.id}',this.value)">
-                  <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="mar-pts-${item.id}-${p.id}">+${v} pts</div>
+                  <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="mar-pts-${item.id}-${p.id}">+${v} pts</div>
                 </div>`;
               }).join('')}
             </div>
@@ -2651,7 +2995,7 @@ function renderMaraudeursManche() {
                   <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
                     value="${data.scores[p.id][item.id] || ''}" placeholder="—"
                     oninput="updateMaraudeurs('${item.id}','${p.id}',this.value)">
-                  <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="mar-pts-${item.id}-${p.id}">+${v} pts</div>
+                  <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="mar-pts-${item.id}-${p.id}">+${v} pts</div>
                 </div>`;
               }).join('')}
             </div>
@@ -2684,7 +3028,7 @@ function renderMaraudeursManche() {
                 <input type="text" inputmode="numeric" class="agr-field neg" style="width:100%"
                   value="${data.scores[p.id].terreur || ''}" placeholder="—"
                   oninput="updateMaraudeurs('terreur','${p.id}',this.value)">
-                <div style="font-size:11px;font-weight:700;color:var(--red) score-pts-label" id="mar-pts-terreur-${p.id}">${tv} pts</div>
+                <div style="font-size:11px;font-weight:700;color:var(--red)" class="score-pts-label" id="mar-pts-terreur-${p.id}">${tv} pts</div>
               </div>`;
             }).join('')}
           </div>
@@ -2704,6 +3048,23 @@ function renderMaraudeursManche() {
         </div>
       </div>
 
+      <!-- Départage -->
+      <div class="card" style="margin-bottom:10px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)">
+        <div class="agr-section-head" style="color:var(--text-2)">Départage (égalité)</div>
+        <div class="agr-row">
+          <div class="agr-label">
+            <div class="agr-label-text">Pions Faveur</div>
+            <div class="agr-label-hint">Nombre de pions Faveur — départage uniquement</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${players.map(p => `<div style="width:72px">
+              <input type="text" inputmode="numeric" class="agr-field" style="width:100%;color:var(--text-2)"
+                value="${data.scores[p.id].faveur || ''}" placeholder="—"
+                oninput="updateMaraudeurs('faveur','${p.id}',this.value)">
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
       <div class="manche-footer">
         <button class="btn btn-primary btn-full" onclick="finishGame('maraudeurs')">Voir les résultats</button>
       </div>
@@ -2715,7 +3076,7 @@ function renderMaraudeursManche() {
 //  NARAK
 // ============================================================
 function initNarak() {
-  const fields = ['recherche','temple','idoles','empl_vides','gardiens','cartes','peurs','tuiles_peur'];
+  const fields = ['recherche','temple','idoles','empl_vides','gardiens','cartes','peurs','tuiles_peur','temple_perdu'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f,'']))]));
 }
@@ -2788,12 +3149,33 @@ function renderNarakManche() {
             <input type="text" inputmode="numeric" class="agr-field ${cat.neg?'neg':''}" style="width:100%"
               value="${data.scores[p.id][cat.id]||''}" placeholder="—"
               oninput="updateNarak('${cat.id}','${p.id}',this.value)">
-            <div style="font-size:11px;font-weight:700;color:${col} score-pts-label" id="narak-pts-${cat.id}-${p.id}">${pts>=0?'+':''}${pts} pts</div>
+            <div style="font-size:11px;font-weight:700;color:${col}" class="score-pts-label" id="narak-pts-${cat.id}-${p.id}">${pts>=0?'+':''}${pts} pts</div>
           </div>`;
         }).join('')}</div>
       </div>`).join('')}
     </div>
     <div class="card score-total-live" style="background:var(--glass-md)"><div style="display:flex;align-items:center"><div style="flex:1;font-size:14px;font-weight:700;color:var(--accent)">Total</div><div style="display:flex;gap:6px">${players.map((p,i)=>`<div style="width:72px;text-align:center"><div style="font-size:22px;font-weight:700" id="narak-total-${p.id}">${totals[i]}</div><div style="font-size:10px;color:var(--text-2)">${p.name}</div></div>`).join('')}</div></div></div>
+    <!-- Départage -->
+    <div class="card" style="margin-bottom:10px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)">
+      <div class="agr-section-head" style="color:var(--text-2)">Départage (égalité)</div>
+      <div class="agr-row" style="align-items:center">
+        <div class="agr-label">
+          <div class="agr-label-text">Premier au Temple perdu</div>
+          <div class="agr-label-hint">1er à avoir atteint le Temple — départage uniquement</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${players.map(p => {
+            const active = data.scores[p.id].temple_perdu === 'oui';
+            return `<div style="width:72px;text-align:center">
+              <button onclick="updateNarak('temple_perdu','${p.id}','${active?'non':'oui'}')"
+                style="width:100%;padding:7px 4px;border-radius:10px;border:1px solid ${active?'var(--green)':'var(--border)'};background:${active?'rgba(48,209,88,.15)':'var(--glass)'};color:${active?'var(--green)':'var(--text-2)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">
+                ${active?'✓ Oui':'Non'}
+              </button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
     <div class="manche-footer"><button class="btn btn-primary btn-full" onclick="finishGame('narak')">Voir les résultats</button></div>
   </div>`;
 }
@@ -2948,7 +3330,7 @@ function renderVivaCatrinaManche() {
         <input type="text" inputmode="numeric" class="agr-field" style="width:100%"
           value="${data.scores[p.id][id]||''}" placeholder="—"
           oninput="updateVivaCatrina('${id}','${p.id}',this.value)">
-        <div style="font-size:11px;font-weight:700;color:var(--green) score-pts-label" id="cat-pts-${id}-${p.id}">+${pts} pts</div>
+        <div style="font-size:11px;font-weight:700;color:var(--green)" class="score-pts-label" id="cat-pts-${id}-${p.id}">+${pts} pts</div>
       </div>`;
     }).join('')}</div>
   </div>`;
@@ -3079,17 +3461,22 @@ function finishGame(gameId) {
   if (gameId === 'narak') {
     results = players.map(p => {
       const d = data.scores[p.id];
-      const recherche = parseInt(d.recherche)  || 0;
-      const temple    = parseInt(d.temple)     || 0;
-      const idoles    = parseInt(d.idoles)     || 0;
-      const empl_vides= parseInt(d.empl_vides) || 0;
-      const gardiens  = parseInt(d.gardiens)   || 0;
-      const cartes    = parseInt(d.cartes)     || 0;
-      const peurs     = parseInt(d.peurs)      || 0;
-      const tuiles_peur = parseInt(d.tuiles_peur) || 0;
+      const recherche   = parseInt(d.recherche)    || 0;
+      const temple      = parseInt(d.temple)       || 0;
+      const idoles      = parseInt(d.idoles)       || 0;
+      const empl_vides  = parseInt(d.empl_vides)   || 0;
+      const gardiens    = parseInt(d.gardiens)     || 0;
+      const cartes      = parseInt(d.cartes)       || 0;
+      const peurs       = parseInt(d.peurs)        || 0;
+      const tuiles_peur = parseInt(d.tuiles_peur)  || 0;
+      const temple_perdu = d.temple_perdu === 'oui' ? 1 : 0;
       const total = recherche + temple + (idoles*3) + empl_vides + (gardiens*5) + cartes - peurs - (tuiles_peur*2);
-      return { ...p, total };
-    }).sort((a,b) => b.total - a.total);
+      return { ...p, total, _temple_perdu: temple_perdu, _recherche: recherche };
+    }).sort((a,b) =>
+      b.total - a.total ||                        // 1. total
+      b._temple_perdu - a._temple_perdu ||        // 2. premier au Temple perdu
+      b._recherche - a._recherche                 // 3. score Recherche
+    );
   }
 
   if (gameId === 'citadelles') {
@@ -3147,7 +3534,8 @@ function finishGame(gameId) {
       // Calcul Bastion
       const bastionPv = bastion === 0 ? 0 : bastion <= 3 ? bastion*3 : bastion <= 5 ? bastion*4 : bastion*5;
       const total = gloire + artefacts + butin + fermePv + murPv + bastionPv + propheties + terreurPv;
-      return { ...p, total, _ferme:ferme, _mur:mur, _bastion:bastion };
+      const faveur = parseInt(d.faveur) || 0;
+      return { ...p, total, _ferme:ferme, _mur:mur, _bastion:bastion, _faveur:faveur };
     });
     // Bonus majorité Ferme +3, Mur +4, Bastion +5
     ['ferme','mur','bastion'].forEach((type,ti) => {
@@ -3155,7 +3543,10 @@ function finishGame(gameId) {
       const max = Math.max(...results.map(r => r['_'+type]));
       if (max > 0) results.forEach(r => { if (r['_'+type] === max) r.total += bonus; });
     });
-    results.sort((a,b) => b.total - a.total);
+    results.sort((a,b) =>
+      b.total - a.total ||                        // 1. total
+      (b._faveur||0) - (a._faveur||0)             // 2. pions Faveur
+    );
   }
 
   if (gameId === 'wingspan') {
@@ -3179,9 +3570,15 @@ function finishGame(gameId) {
       const combos     = parseInt(d.combos)     || 0;
       const generaux   = parseInt(d.generaux)   || 0;
       const financiers = parseInt(d.financiers) || 0;
+      const cartes_emp = parseInt(d.cartes_emp) || 0;
+      const personnages= (parseInt(d.generaux)||0) + (parseInt(d.financiers)||0);
       const total = bruts + combos + generaux + financiers;
-      return { ...p, total };
-    }).sort((a,b) => b.total - a.total);
+      return { ...p, total, _cartes_emp: cartes_emp, _personnages: personnages };
+    }).sort((a,b) =>
+      b.total - a.total ||                        // 1. total
+      b._cartes_emp - a._cartes_emp ||            // 2. nb cartes dans Empire
+      b._personnages - a._personnages             // 3. nb Personnages (Généraux + Financiers)
+    );
   }
 
   if (gameId === 'pillards') {
@@ -3198,28 +3595,33 @@ function finishGame(gameId) {
       const betail     = parseInt(d.betail)     || 0;
       const butin_pv   = or + fer + Math.floor(betail / 2);
       const total = pv_partie + VALKYRIE_PV[valkyrie] + armement + offrandes + equipage + butin_pv;
-      return { ...p, total };
-    }).sort((a,b) => b.total - a.total);
+      return { ...p, total, _valkyrie: VALKYRIE_PV[valkyrie], _armement: armement };
+    }).sort((a,b) =>
+      b.total - a.total ||                        // 1. total
+      b._valkyrie - a._valkyrie ||                // 2. piste Valkyrie
+      b._armement - a._armement                   // 3. piste Armement
+    );
   }
 
   if (gameId === 'dewan') {
     results = players.map(p => {
       const d = data.scores[p.id];
       const histoire = parseInt(d.histoire) || 0;
-      const feu = parseInt(d.feu) || 0;
-      const groupes = parseInt(d.groupes) || 0;
-      const baies = parseInt(d.baies) || 0;
-      // Bonus feu : calculé après pour trouver le max
-      const total_sans_bonus = histoire + feu + (groupes * 4) + (baies * 2);
-      return { ...p, total_sans_bonus, feu, histoire, groupes, baies };
+      const feu      = parseInt(d.feu)      || 0;
+      const groupes  = parseInt(d.groupes)  || 0;
+      const baies    = parseInt(d.baies)    || 0;
+      const terrain  = parseInt(d.terrain)  || 0;
+      const total_base = histoire + feu + (groupes * 4) + (baies * 2);
+      return { ...p, total_base, feu, terrain };
     });
-    // Bonus +4 pts pour le joueur avec le plus de feu
-    const maxFeu = Math.max(...results.map(r => r.feu));
-    const feuLeaders = results.filter(r => r.feu === maxFeu && maxFeu > 0);
+    // Bonus +4 feu (en cas d'égalité, tous gagnent les 4 pts)
+    const maxFeu = Math.max(...results.map(r => r.feu), 0);
     results = results.map(r => ({
       ...r,
-      total: r.total_sans_bonus + (feuLeaders.find(l => l.id === r.id) ? 4 : 0)
-    })).sort((a, b) => b.total - a.total);
+      total: r.total_base + (r.feu === maxFeu && maxFeu > 0 ? 4 : 0)
+    }));
+    // Tri : total DESC, puis cartes Terrain DESC en départage
+    results.sort((a, b) => b.total - a.total || b.terrain - a.terrain);
   }
 
   if (gameId === 'seven_wonders') {
@@ -3265,10 +3667,10 @@ function launchSimplePodium(results) {
       ${results.map((r, rank) => {
         const rankCls   = rankClasses[rank] || 'other';
         const rankLabel = rankLabels[rank]  || (rank+1)+'.';
-        return `<div class="reveal-card\${rank===0?' first':''}" id="sp-card-\${rank}" style="opacity:0;transform:translateY(20px)">
-          <div class="reveal-rank \${rankCls}">\${rankLabel}</div>
-          <div class="reveal-name">\${r.name}</div>
-          <div class="reveal-score" id="sp-score-\${rank}">\${r.total}</div>
+        return `<div class="reveal-card${rank===0?' first':''}" id="sp-card-${rank}" style="opacity:0;transform:translateY(20px)">
+          <div class="reveal-rank ${rankCls}">${rankLabel}</div>
+          <div class="reveal-name">${r.name}</div>
+          <div class="reveal-score" id="sp-score-${rank}">${r.total}</div>
         </div>`;
       }).join('')}
     </div>
@@ -3279,6 +3681,8 @@ function launchSimplePodium(results) {
 
   document.body.appendChild(overlay);
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  playPodiumMusic();
+  playPodiumMusic();
 
   // Apparition rapide de toutes les cartes
   results.forEach((r, rank) => {
@@ -3303,127 +3707,120 @@ function launchReveal(results) {
   const overlay = document.createElement('div');
   overlay.className = 'reveal-overlay';
   overlay.id = 'reveal-overlay';
-
-  const n = results.length;
-  // Ordre : du dernier au premier
-  const revealOrder = [...results].reverse();
+  const revealOrder = [...results].reverse(); // dernier → 1er
   const rankLabels  = ['🥇','🥈','🥉'];
   const rankClasses = ['gold','silver','bronze','other'];
+  const n = results.length;
 
-  // Séparation : au-delà du top 3 vs top 3
-  const others  = revealOrder.filter((r) => results.indexOf(r) >= 3);  // 4e, 5e...
-  const podium3 = revealOrder.filter((r) => results.indexOf(r) <  3);  // 3e, 2e, 1er (dans cet ordre)
+  // Durées par rang (du dernier au 1er)
+  // rank 0 = 1er (plus lent), rank n-1 = dernier (plus rapide)
+  function scoreDur(rank) {
+    // 1er=6s, 2e=5s, 3e=4s, 4e+=3s
+    if (rank === 0) return 6000;
+    if (rank === 1) return 5000;
+    if (rank === 2) return 4000;
+    return 3000;
+  }
+  const maxDur = scoreDur(0); // 6000ms
 
   overlay.innerHTML = `
-    <div class="reveal-game-name" id="rev-game-name">${session.gameName}</div>
-    <div class="reveal-title" id="rev-title">Résultats de la partie</div>
-
-    <!-- Autres (4e et +) -->
-    <div class="reveal-cards" id="rev-others" style="width:100%;max-width:420px">
-      ${others.map((r) => {
+    ${(GAMES[session.gameId]?.img_banner || GAMES[session.gameId]?.img) ? `
+      <div style="width:100%;max-width:500px;height:130px;border-radius:18px;overflow:hidden;margin-bottom:24px;position:relative;border:1px solid rgba(255,255,255,.1)">
+        <div style="position:absolute;inset:0;background-image:url('${GAMES[session.gameId]?.img_banner || GAMES[session.gameId]?.img}');background-size:cover;background-position:center;filter:brightness(.6)"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1),rgba(0,0,0,.6))"></div>
+        <div style="position:absolute;bottom:12px;left:16px;right:16px;display:flex;align-items:flex-end;justify-content:space-between">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:#fff;letter-spacing:.08em">${session.gameName}</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5)">Résultats</div>
+        </div>
+      </div>` : `
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:rgba(255,255,255,.75);margin-bottom:4px;letter-spacing:.08em">${session.gameName}</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:36px">Résultats</div>`}
+    <div id="rev-row" style="display:flex;gap:10px;align-items:flex-end;justify-content:center;width:100%;max-width:500px;padding:0 8px">
+      ${revealOrder.map((r) => {
         const rank = results.indexOf(r);
         const rankCls   = rankClasses[rank] || 'other';
-        const rankLabel = (rank + 1) + '.';
-        return `<div class="reveal-card" id="rev-card-\${rank}">
-          <div class="reveal-rank \${rankCls}">\${rankLabel}</div>
-          <div class="reveal-name">\${r.name}</div>
-          <div class="reveal-score counting" id="rev-score-\${rank}">0</div>
+        const rankLabel = rankLabels[rank]  || (rank+1)+'.';
+        const isWinner  = rank === 0;
+        // Hauteur : 1er plus grand
+        const hMap = { 0:'240px', 1:'200px', 2:'175px' };
+        const h = hMap[rank] || '155px';
+        const scoreFontSize = n <= 3 ? '32' : '26';
+        return `<div class="rev-vcard${isWinner ? ' rev-winner' : ''}"
+          id="rev-pod-${rank}"
+          style="opacity:0;transform:translateY(40px);flex:1;min-width:0;height:${h};
+                 display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+                 padding:12px 6px 16px;
+                 background:${isWinner ? 'rgba(255,214,10,.1)' : 'rgba(255,255,255,.06)'};
+                 border:1px solid ${isWinner ? 'rgba(255,214,10,.35)' : 'rgba(255,255,255,.1)'};
+                 border-radius:18px;transition:opacity .6s ease,transform .6s ease,box-shadow .8s ease">
+          <!-- Rang -->
+          <div style="font-size:${n<=3?'24':'20'}px;margin-bottom:12px">${rankLabel}</div>
+          <!-- Nom caché au départ -->
+          <div id="rev-name-${rank}"
+            style="font-family:'Bebas Neue',sans-serif;
+                   font-size:${n<=3?'22':'17'}px;
+                   letter-spacing:.06em;
+                   color:rgba(255,255,255,.9);
+                   text-align:center;word-break:break-word;
+                   margin-bottom:10px;line-height:1.2;
+                   opacity:0;transition:opacity .8s ease">
+            ${r.name}
+          </div>
+          <!-- Score -->
+          <div id="rev-score-${rank}"
+            style="font-family:'Bebas Neue',sans-serif;
+                   font-size:${scoreFontSize}px;font-weight:900;
+                   color:${isWinner ? '#FFD60A' : 'rgba(255,255,255,.95)'};
+                   letter-spacing:.04em;font-variant-numeric:tabular-nums">
+            0
+          </div>
         </div>`;
       }).join('')}
     </div>
-
-    <!-- Spotlight podium (caché au départ) -->
-    <div id="rev-spotlight" style="display:none;position:fixed;inset:0;z-index:2001;background:#000;flex-direction:column;align-items:center;justify-content:center;padding:24px">
-      <div class="reveal-game-name" style="margin-bottom:6px">${session.gameName}</div>
-      <div class="reveal-title" style="margin-bottom:20px">🏆 Podium</div>
-      <div style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px" id="rev-podium-cards">
-        ${podium3.map((r) => {
-          const rank = results.indexOf(r);
-          const rankCls   = rankClasses[rank] || 'other';
-          const rankLabel = rankLabels[rank] || '';
-          return `<div class="reveal-card\${rank===0?' first':''}" id="rev-pod-\${rank}" style="opacity:0;transform:translateY(30px)">
-            <div class="reveal-rank \${rankCls}">\${rankLabel}</div>
-            <div class="reveal-name" style="font-size:\${rank===0?'22px':'18px'}">\${r.name}</div>
-            <div class="reveal-score counting" id="rev-pod-score-\${rank}">0</div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div class="reveal-buttons" id="rev-btns" style="max-width:420px">
-        <button class="btn btn-glass" style="flex:1" onclick="closeReveal();newGame()">Nouvelle partie</button>
-        <button class="btn btn-primary" style="flex:1" onclick="closeReveal();saveAndFinish()">Sauvegarder</button>
-      </div>
+    <div id="rev-btns" class="reveal-buttons" style="max-width:500px;margin-top:32px">
+      <button class="btn btn-glass" style="flex:1" onclick="closeReveal();newGame()">Nouvelle partie</button>
+      <button class="btn btn-primary" style="flex:1" onclick="closeReveal();saveAndFinish()">Sauvegarder</button>
     </div>`;
 
   document.body.appendChild(overlay);
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
 
-  // ---- PHASE 1 : Révélation des autres (4e, 5e...) un par un ----
-  let delay = 400;
-  others.forEach((r) => {
-    const rank = results.indexOf(r);
-    setTimeout(() => {
-      const card = document.getElementById('rev-card-' + rank);
-      if (card) card.classList.add('show');
-      animateScore('rev-score-' + rank, r.total, 700, false);
-    }, delay);
-    delay += 900;
-  });
-
-  // ---- PHASE 2 : Transition vers le spotlight podium ----
-  const spotlightDelay = delay + 600;
+  // ---- Toutes les cartes apparaissent ensemble ----
   setTimeout(() => {
-    // Fondu noir sur les autres
-    const othersDiv = document.getElementById('rev-others');
-    const gameName  = document.getElementById('rev-game-name');
-    const title     = document.getElementById('rev-title');
-    if (othersDiv) { othersDiv.style.transition = 'opacity .8s'; othersDiv.style.opacity = '0'; }
-    if (gameName)  { gameName.style.transition  = 'opacity .8s'; gameName.style.opacity  = '0'; }
-    if (title)     { title.style.transition     = 'opacity .8s'; title.style.opacity     = '0'; }
+    revealOrder.forEach((r, i) => {
+      const rank = results.indexOf(r);
+      setTimeout(() => {
+        const card = document.getElementById('rev-pod-' + rank);
+        if (card) { card.style.opacity = '1'; card.style.transform = 'translateY(0)'; }
+        animateScore('rev-score-' + rank, r.total, scoreDur(rank), rank === 0);
+      }, i * 80); // micro cascade 80ms pour un effet naturel
+    });
+  }, 400);
 
+  // ---- Révélation des noms après que LE 1ER a fini (maxDur) ----
+  const nameDelay = 400 + maxDur + 1000; // apparition cartes + score 1er + 1s de pause
+  setTimeout(() => {
+    revealOrder.forEach((r, i) => {
+      const rank = results.indexOf(r);
+      setTimeout(() => {
+        const nameEl = document.getElementById('rev-name-' + rank);
+        if (nameEl) nameEl.style.opacity = '1';
+      }, i * 300); // cascade 300ms entre chaque nom
+    });
+
+    // Glow gagnant + confettis + boutons après tous les noms
+    const allNamesDelay = n * 300 + 400;
     setTimeout(() => {
-      // Afficher le spotlight
-      const spot = document.getElementById('rev-spotlight');
-      if (spot) { spot.style.display = 'flex'; }
+      const winner = document.getElementById('rev-pod-0');
+      if (winner) winner.style.boxShadow = '0 0 80px rgba(255,214,10,.55)';
+      launchConfetti();
+      setTimeout(() => {
+        const btns = document.getElementById('rev-btns');
+        if (btns) btns.classList.add('show');
+      }, 800);
+    }, allNamesDelay);
 
-      // ---- PHASE 3 : Podium 3e → 2e → 1er ----
-      let podDelay = 300;
-      podium3.forEach((r) => {
-        const rank = results.indexOf(r);
-        const isWinner = rank === 0;
-        // Durée compteur : très lente pour le 1er (suspense)
-        const dur = isWinner ? 2200 : 900;
-
-        setTimeout(() => {
-          const card = document.getElementById('rev-pod-' + rank);
-          if (card) {
-            card.style.transition = 'opacity .6s ease, transform .6s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-          }
-          animateScore('rev-pod-score-' + rank, r.total, dur, isWinner);
-
-          // Confettis + glow sur le 1er
-          if (isWinner) {
-            setTimeout(() => {
-              launchConfetti();
-              const card1 = document.getElementById('rev-pod-0');
-              if (card1) {
-                card1.style.transition = 'box-shadow .5s ease';
-                card1.style.boxShadow = '0 0 80px rgba(255,214,10,.5)';
-              }
-              // Afficher les boutons
-              setTimeout(() => {
-                const btns = document.getElementById('rev-btns');
-                if (btns) btns.classList.add('show');
-              }, 800);
-            }, dur + 300);
-          }
-        }, podDelay);
-
-        podDelay += isWinner ? 1200 : 1400;
-      });
-    }, 900);
-  }, spotlightDelay);
+  }, nameDelay);
 }
 
 function animateScore(elemId, target, duration, isWinner) {
@@ -3452,6 +3849,7 @@ function animateScore(elemId, target, duration, isWinner) {
 function closeReveal() {
   const o = document.getElementById('reveal-overlay');
   if (o) o.remove();
+  stopPodiumMusic();
 }
 
 
@@ -3570,12 +3968,37 @@ function toast(msg) {
 }
 
 function launchConfetti() {
-  const cols = ['#64D2FF', '#30D158', '#FFD60A', '#FF453A', '#ffffff'];
-  for (let i = 0; i < 24; i++) setTimeout(() => {
-    const c = document.createElement('div'); c.className = 'confetti';
-    c.style.cssText = `left:${Math.random() * 100}vw;top:${20 + Math.random() * 20}vh;background:${cols[Math.floor(Math.random() * cols.length)]};transform:rotate(${Math.random() * 360}deg);animation-delay:${Math.random() * .5}s;animation-duration:${.7 + Math.random() * .6}s`;
-    document.body.appendChild(c); setTimeout(() => c.remove(), 1600);
-  }, i * 40);
+  const cols = ['#64D2FF','#30D158','#FFD60A','#FF453A','#ffffff','#BF5AF2','#FF9F0A','#FF6B9D'];
+  const shapes = ['2px','50%','0']; // rectangle, cercle, triangle-like
+  const totalPieces = 120;
+  const waveDuration = 3500; // étaler sur 3.5s
+
+  for (let i = 0; i < totalPieces; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      const col   = cols[Math.floor(Math.random() * cols.length)];
+      const left  = Math.random() * 105 - 2; // -2% à 107% pour couvrir les bords
+      const w     = 6 + Math.random() * 8;   // 6-14px
+      const h     = 6 + Math.random() * 10;  // 6-16px
+      const dur   = 2.8 + Math.random() * 1.5; // 2.8s à 4.3s (tombe lentement)
+      const delay = Math.random() * 0.4;
+      const br    = shapes[Math.floor(Math.random() * shapes.length)];
+      const rot   = Math.random() * 360;
+      c.style.cssText = `
+        left:${left}vw;
+        width:${w}px;
+        height:${h}px;
+        background:${col};
+        border-radius:${br};
+        transform:rotate(${rot}deg);
+        animation-duration:${dur}s;
+        animation-delay:${delay}s;
+      `;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), (dur + delay + 0.5) * 1000);
+    }, (i / totalPieces) * waveDuration);
+  }
 }
 
 // ============================================================
@@ -3748,14 +4171,19 @@ function closeAdminPage() {
 }
 
 function showAdminSection(section) {
-  document.getElementById('admin-section-images').style.display = section === 'images' ? 'block' : 'none';
-  document.getElementById('admin-section-games').style.display  = section === 'games'  ? 'block' : 'none';
-  document.getElementById('admin-tab-images').className = 'btn ' + (section === 'images' ? 'btn-primary' : 'btn-glass');
-  document.getElementById('admin-tab-games').className  = 'btn ' + (section === 'games'  ? 'btn-primary' : 'btn-glass');
-  document.getElementById('admin-tab-images').style.cssText = 'flex-direction:column;gap:4px;padding:14px;border-radius:var(--r-lg)';
-  document.getElementById('admin-tab-games').style.cssText  = 'flex-direction:column;gap:4px;padding:14px;border-radius:var(--r-lg)';
+  ['images','games','music'].forEach(s => {
+    const sec = document.getElementById('admin-section-' + s);
+    const tab = document.getElementById('admin-tab-' + s);
+    if (sec) sec.style.display = s === section ? 'block' : 'none';
+    if (tab) {
+      tab.className = 'btn ' + (s === section ? 'btn-primary' : 'btn-glass');
+      tab.style.cssText = 'flex-direction:column;gap:4px;padding:12px;border-radius:var(--r-lg)';
+    }
+  });
   if (section === 'images') renderAdminImages();
   if (section === 'games')  renderAdminGames();
+  if (section === 'music')  showAdminMusicSection();
+  if (section === 'music')  renderAdminMusic();
 }
 
 function renderAdminImages() {
@@ -4015,8 +4443,317 @@ function loadUserSessions() {
   });
 }
 
+// ============================================================
+//  AUDIO PLAYER
+// ============================================================
+let audioTracks = [];    // { id, name, url }
+let podiumUrl = '';
+let currentTrackIdx = -1;
+let isPlaying = false;
+
+function loadAudioConfig() {
+  db.ref(REF + '/audio').on('value', snap => {
+    const data = snap.val() || {};
+    audioTracks = Object.values(data.tracks || {}).sort((a,b) => (a.order||0)-(b.order||0));
+    podiumUrl = data.podium_url || '';
+    renderAudioTracks();
+    // Restaurer la piste sauvegardée
+    const saved = localStorage.getItem('ptg_audio_track');
+    if (saved !== null && audioTracks[parseInt(saved)]) {
+      loadTrack(parseInt(saved), false);
+    }
+  });
+}
+
+function toggleAudioPlayer() {
+  const p = document.getElementById('audio-player');
+  if (p) p.classList.toggle('open');
+}
+
+function renderAudioTracks() {
+  const list = document.getElementById('audio-tracks-list');
+  if (!list) return;
+  if (!audioTracks.length) {
+    list.innerHTML = `<div style="font-size:12px;color:var(--text-3);text-align:center;padding:8px">Aucune piste — ajoute des musiques dans l'admin</div>`;
+    return;
+  }
+  list.innerHTML = audioTracks.map((t, i) => `
+    <div class="audio-track-item${i === currentTrackIdx ? ' active' : ''}" onclick="loadTrack(${i}, true)">
+      <span class="audio-track-item-ico">${i === currentTrackIdx && isPlaying ? '▶' : '♪'}</span>
+      <span class="audio-track-item-name">${t.name}</span>
+    </div>`).join('');
+}
+
+function loadTrack(idx, autoplay) {
+  if (!audioTracks[idx]) return;
+  currentTrackIdx = idx;
+  localStorage.setItem('ptg_audio_track', idx);
+  const audio = document.getElementById('bg-audio');
+  if (!audio) return;
+  audio.src = audioTracks[idx].url;
+  audio.volume = parseFloat(document.getElementById('audio-vol')?.value || 0.5);
+  const nameEl = document.getElementById('audio-track-name');
+  if (nameEl) nameEl.textContent = audioTracks[idx].name;
+  if (autoplay) {
+    audio.play().then(() => { isPlaying = true; updatePlayBtn(); }).catch(()=>{});
+  }
+  renderAudioTracks();
+  updateMusicHeaderBtn();
+}
+
+function togglePlay() {
+  const audio = document.getElementById('bg-audio');
+  if (!audio) return;
+  if (!audio.src && audioTracks.length) { loadTrack(0, true); return; }
+  if (audio.paused) {
+    audio.play().then(() => { isPlaying = true; updatePlayBtn(); updateMusicHeaderBtn(); }).catch(()=>{});
+  } else {
+    audio.pause();
+    isPlaying = false;
+    updatePlayBtn();
+    updateMusicHeaderBtn();
+  }
+}
+
+function prevTrack() {
+  const n = audioTracks.length;
+  if (!n) return;
+  loadTrack((currentTrackIdx - 1 + n) % n, true);
+}
+
+function nextTrack() {
+  const n = audioTracks.length;
+  if (!n) return;
+  loadTrack((currentTrackIdx + 1) % n, true);
+}
+
+function setVolume(v) {
+  const audio = document.getElementById('bg-audio');
+  if (audio) audio.volume = parseFloat(v);
+}
+
+function updatePlayBtn() {
+  const btn = document.getElementById('audio-play-btn');
+  if (btn) btn.textContent = isPlaying ? '⏸' : '▶';
+}
+
+function updateMusicHeaderBtn() {
+  const btn = document.getElementById('music-toggle-btn');
+  const lbl = document.getElementById('music-btn-label');
+  if (!btn) return;
+  if (isPlaying && currentTrackIdx >= 0 && audioTracks[currentTrackIdx]) {
+    btn.className = 'music-header-btn playing';
+    if (lbl) lbl.textContent = audioTracks[currentTrackIdx].name;
+  } else {
+    btn.className = 'music-header-btn';
+    if (lbl) lbl.textContent = 'Musique';
+  }
+}
+
+// Auto-next quand la piste se termine (pas de loop sur la liste, loop sur piste unique)
+document.addEventListener('DOMContentLoaded', () => {
+  const audio = document.getElementById('bg-audio');
+  if (audio) {
+    audio.addEventListener('ended', () => {
+      if (audioTracks.length > 1) nextTrack();
+    });
+  }
+});
+
+// Musique podium
+function playPodiumMusic() {
+  if (!podiumUrl) return;
+  const audio = document.getElementById('podium-audio');
+  if (!audio) return;
+  // Mettre en pause la musique d'ambiance
+  const bg = document.getElementById('bg-audio');
+  if (bg && !bg.paused) { bg.pause(); }
+  audio.src = podiumUrl;
+  audio.volume = parseFloat(document.getElementById('audio-vol')?.value || 0.5);
+  audio.loop = true;
+  audio.play().catch(()=>{});
+}
+
+function stopPodiumMusic() {
+  const audio = document.getElementById('podium-audio');
+  if (audio) { audio.pause(); audio.currentTime = 0; }
+  // Reprendre ambiance si elle était en cours
+  const bg = document.getElementById('bg-audio');
+  if (bg && bg.src && isPlaying) bg.play().catch(()=>{});
+}
+
+// ============================================================
+//  ADMIN MUSIQUES
+// ============================================================
+function renderAdminMusic() {
+  // Podium URL
+  db.ref(REF + '/audio/podium_url').once('value', snap => {
+    const el = document.getElementById('admin-podium-url');
+    if (el) el.value = snap.val() || '';
+  });
+  // Tracks
+  renderAdminTracks();
+}
+
+function renderAdminTracks() {
+  db.ref(REF + '/audio/tracks').once('value', snap => {
+    const tracks = snap.val() || {};
+    const list = document.getElementById('admin-tracks-list');
+    if (!list) return;
+    const arr = Object.entries(tracks).sort((a,b) => (a[1].order||0)-(b[1].order||0));
+    if (!arr.length) {
+      list.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 0">Aucune piste ajoutée.</div>';
+      return;
+    }
+    list.innerHTML = arr.map(([id, t]) => `
+      <div class="admin-settings-card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <input class="field" style="flex:1;font-size:13px;padding:7px 12px" value="${t.name}"
+            placeholder="Nom de la piste..." id="track-name-${id}"
+            onchange="saveTrack('${id}')">
+          <button class="btn btn-danger btn-sm" onclick="deleteTrack('${id}')">✕</button>
+        </div>
+        <div class="admin-label">URL du fichier MP3</div>
+        <input class="field" style="font-size:12px;padding:7px 12px" value="${t.url}"
+          placeholder="https://..." id="track-url-${id}"
+          onchange="saveTrack('${id}')">
+      </div>`).join('');
+  });
+}
+
+function addTrack() {
+  const id = 'track_' + Date.now();
+  const order = Date.now();
+  db.ref(REF + '/audio/tracks/' + id).set({ name: 'Nouvelle piste', url: '', order })
+    .then(() => { renderAdminTracks(); loadAudioConfig(); });
+}
+
+function saveTrack(id) {
+  const name = document.getElementById('track-name-' + id)?.value.trim();
+  const url  = document.getElementById('track-url-'  + id)?.value.trim();
+  if (name !== undefined && url !== undefined) {
+    db.ref(REF + '/audio/tracks/' + id).update({ name, url })
+      .then(() => { toast('Piste sauvegardée !'); loadAudioConfig(); });
+  }
+}
+
+function deleteTrack(id) {
+  if (!confirm('Supprimer cette piste ?')) return;
+  db.ref(REF + '/audio/tracks/' + id).remove()
+    .then(() => { renderAdminTracks(); loadAudioConfig(); });
+}
+
+function savePodiumMusic(url) {
+  db.ref(REF + '/audio/podium_url').set(url.trim())
+    .then(() => { podiumUrl = url.trim(); toast('Musique podium sauvegardée !'); });
+}
+
+// ============================================================
+//  LANCEUR DE DÉS
+// ============================================================
+const DICE_SIDES = { D4:4, D6:6, D8:8, D10:10, D12:12, D20:20 };
+let diceState = { type: 'D6', count: 1 };
+
+function initDiceView() {
+  selectDice(diceState.type);
+  selectDiceCount(diceState.count);
+}
+
+function selectDice(type) {
+  diceState.type = type;
+  Object.keys(DICE_SIDES).forEach(d => {
+    const btn = document.getElementById('dice-btn-' + d);
+    if (btn) {
+      btn.className = 'btn ' + (d === type ? 'btn-primary' : 'btn-glass');
+      btn.style.cssText = "flex:1;min-width:60px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em";
+    }
+  });
+}
+
+function selectDiceCount(n) {
+  diceState.count = n;
+  for (let i = 1; i <= 6; i++) {
+    const btn = document.getElementById('dice-count-' + i);
+    if (btn) {
+      btn.className = 'btn ' + (i === n ? 'btn-primary' : 'btn-glass');
+      btn.style.flex = '1';
+      btn.style.fontSize = '15px';
+      btn.style.fontWeight = '700';
+    }
+  }
+}
+
+function rollDice() {
+  const { type, count } = diceState;
+  const sides = DICE_SIDES[type];
+  const facesEl = document.getElementById('dice-faces');
+  const totalEl = document.getElementById('dice-total');
+  if (!facesEl) return;
+
+  // Créer les faces avec animation rolling
+  facesEl.innerHTML = Array.from({length: count}, (_, i) =>
+    `<div class="dice-face rolling" id="dface-${i}">
+      <span id="dval-${i}">?</span>
+      <span class="dice-type-label">${type}</span>
+    </div>`
+  ).join('');
+
+  if (totalEl) { totalEl.style.display = 'none'; }
+
+  // Animer les valeurs pendant 600ms puis révéler
+  const interval = setInterval(() => {
+    for (let i = 0; i < count; i++) {
+      const el = document.getElementById('dval-' + i);
+      if (el) el.textContent = Math.ceil(Math.random() * sides);
+    }
+  }, 80);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      const val = Math.ceil(Math.random() * sides);
+      results.push(val);
+      const face = document.getElementById('dface-' + i);
+      const valEl = document.getElementById('dval-' + i);
+      if (valEl) valEl.textContent = val;
+      if (face) {
+        face.classList.remove('rolling');
+        // Stagger l'animation d'arrivée
+        setTimeout(() => {
+          face.classList.add('landed');
+          // Couleur spéciale pour max
+        }, i * 80);
+      }
+    }
+    // Afficher le total si plusieurs dés
+    if (count > 1 && totalEl) {
+      const sum = results.reduce((a,b) => a+b, 0);
+      totalEl.textContent = '= ' + sum;
+      totalEl.style.display = 'block';
+      setTimeout(() => { totalEl.style.display = 'block'; }, count * 80 + 200);
+    }
+    // Mettre en évidence le max (D20 = 20, etc.)
+    const max = Math.max(...results);
+    results.forEach((val, i) => {
+      if (val === sides) { // valeur max du dé
+        setTimeout(() => {
+          const face = document.getElementById('dface-' + i);
+          if (face) {
+            face.style.borderColor = 'var(--gold)';
+            face.style.background = 'rgba(255,214,10,.15)';
+            face.querySelector('span').style.color = 'var(--gold)';
+          }
+        }, i * 80 + 400);
+      }
+    });
+  }, 600);
+}
+
 init();
 loadGameImages();
+loadAudioTracks();
+loadAudioConfig();
 
 // ---- SERVICE WORKER ----
 if ('serviceWorker' in navigator) {
