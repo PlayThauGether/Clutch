@@ -811,8 +811,8 @@ body::before {
         <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.3);border-radius:20px;padding:6px 12px;color:#64D2FF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
           Installer
         </button>
-        <button class="music-header-btn" id="music-toggle-btn" onclick="toggleAudioPlayer()">
-          ♪ <span id="music-btn-label">Musique</span>
+        <button class="music-header-btn" id="music-toggle-btn" onclick="openThemePicker()">
+          ♪ <span id="music-btn-label">Thème</span>
         </button>
         <div id="auth-btn-wrap">
           <button id="auth-btn" onclick="toggleAuth()"
@@ -964,49 +964,21 @@ body::before {
   </main>
 </div>
 
-<!-- AUDIO BAR (fixée en bas) -->
-<div class="audio-bar" id="audio-bar">
-  <button class="audio-btn" id="audio-prev-btn" onclick="audioPrev()" title="Piste précédente">⏮</button>
-  <button class="audio-btn" id="audio-play-btn" onclick="audioToggle()" title="Play/Pause">▶</button>
-  <button class="audio-btn" id="audio-next-btn" onclick="audioNext()" title="Piste suivante">⏭</button>
-  <div style="flex:1;min-width:0">
-    <div class="audio-track-name" id="audio-track-name">Aucune piste</div>
-    <div class="audio-track-sub" id="audio-track-sub">Ambiance</div>
-  </div>
-  <input type="range" class="audio-volume" id="audio-volume" min="0" max="1" step="0.05" value="0.5" oninput="audioSetVolume(this.value)" title="Volume">
-  <button class="audio-btn" onclick="toggleAudioPlayer()" title="Choisir une piste">🎵</button>
-  <button class="audio-btn" onclick="closeAudioBar()" title="Fermer">✕</button>
-</div>
-
-
-
 <!-- ETOILE CACHEE ADMIN -->
 <div id="star-trigger" onclick="starClick()" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.08);cursor:pointer;user-select:none;z-index:500;padding:8px 16px">⭐</div>
 
-<!-- PLAYER AUDIO FLOTTANT -->
+<!-- AUDIO -->
 <audio id="bg-audio" loop></audio>
-<audio id="podium-audio" src=""></audio>
+<audio id="podium-audio"></audio>
 
-<div class="audio-player" id="audio-player">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-    <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)">Musique d'ambiance</div>
-    <button class="audio-header-btn" onclick="toggleAudioPlayer()">✕</button>
-  </div>
-  <div class="audio-track-name" id="audio-track-name">Aucune piste sélectionnée</div>
-  <div class="audio-controls">
-    <button class="audio-btn" onclick="prevTrack()" title="Précédent">⏮</button>
-    <button class="audio-btn play-btn" id="audio-play-btn" onclick="togglePlay()">▶</button>
-    <button class="audio-btn" onclick="nextTrack()" title="Suivant">⏭</button>
-  </div>
-  <div class="audio-volume">
-    <span class="audio-vol-icon">🔈</span>
-    <input type="range" class="audio-vol-slider" id="audio-vol" min="0" max="1" step="0.05" value="0.5"
-      oninput="setVolume(this.value)">
-    <span class="audio-vol-icon">🔊</span>
-  </div>
-  <div class="audio-tracks-list" id="audio-tracks-list">
-    <div style="font-size:12px;color:var(--text-3);text-align:center;padding:8px">
-      Aucune piste — ajoute des musiques dans l'admin
+<!-- MODAL: thème musical -->
+<div class="modal-overlay" id="modal-theme">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Thème musical</div>
+    <div id="theme-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-glass btn-sm" onclick="closeModal('modal-theme')">Fermer</button>
     </div>
   </div>
 </div>
@@ -4433,323 +4405,107 @@ function loadUserSessions() {
 }
 
 // ============================================================
-//  AUDIO PLAYER
 // ============================================================
-let audioTracks = [];    // { id, name, url }
-let podiumUrl = '';
-let currentTrackIdx = -1;
-let isPlaying = false;
+//  AUDIO — Thèmes musicaux
+// ============================================================
+let audioTracks  = [];
+let podiumUrl    = '';
+let activeThemeIdx = -1;
 
 function loadAudioConfig() {
   db.ref(REF + '/audio').on('value', snap => {
     const data = snap.val() || {};
     audioTracks = Object.values(data.tracks || {}).sort((a,b) => (a.order||0)-(b.order||0));
-    podiumUrl = data.podium_url || '';
-    renderAudioTracks();
-    // Restaurer la piste sauvegardée
-    const saved = localStorage.getItem('ptg_audio_track');
-    if (saved !== null && audioTracks[parseInt(saved)]) {
-      loadTrack(parseInt(saved), false);
+    podiumUrl   = data.podium_url || '';
+    // Restaurer le thème sauvegardé
+    const saved = parseInt(localStorage.getItem('ptg_theme') || '-1');
+    if (saved >= 0 && audioTracks[saved]) {
+      activeThemeIdx = saved;
+      playTheme(saved);
+      updateThemeBtn();
     }
   });
 }
 
-function openMusicPicker() { toggleAudioPlayer(); }
-function toggleAudioPlayer() {
-  const p = document.getElementById('audio-player');
-  if (p) p.classList.toggle('open');
-}
-
-function renderAudioTracks() {
-  const list = document.getElementById('audio-tracks-list');
+function openThemePicker() {
+  const list = document.getElementById('theme-list');
   if (!list) return;
-  if (!audioTracks.length) {
-    list.innerHTML = `<div style="font-size:12px;color:var(--text-3);text-align:center;padding:8px">Aucune piste — ajoute des musiques dans l'admin</div>`;
-    return;
-  }
-  list.innerHTML = audioTracks.map((t, i) => `
-    <div class="audio-track-item${i === currentTrackIdx ? ' active' : ''}" onclick="loadTrack(${i}, true)">
-      <span class="audio-track-item-ico">${i === currentTrackIdx && isPlaying ? '▶' : '♪'}</span>
-      <span class="audio-track-item-name">${t.name}</span>
-    </div>`).join('');
+  list.innerHTML = [
+    { name: 'Silence', url: '', idx: -1 },
+    ...audioTracks.map((t, i) => ({ ...t, idx: i }))
+  ].map(t => {
+    const isActive = t.idx === activeThemeIdx;
+    return `<button onclick="selectTheme(${t.idx}); closeModal('modal-theme')"
+      style="display:flex;align-items:center;gap:12px;padding:12px 14px;
+             background:${isActive ? 'rgba(100,210,255,.12)' : 'var(--glass)'};
+             border:1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};
+             border-radius:var(--r-lg);text-align:left;cursor:pointer;font-family:inherit;width:100%;
+             color:var(--text)">
+      <span style="font-size:18px">${isActive ? '▶' : '♪'}</span>
+      <span style="font-size:14px;font-weight:600">${t.name}</span>
+      ${isActive ? '<span style="margin-left:auto;font-size:11px;color:var(--accent);font-weight:600">Actif</span>' : ''}
+    </button>`;
+  }).join('');
+  document.getElementById('modal-theme').classList.add('open');
 }
 
-function loadTrack(idx, autoplay) {
+function selectTheme(idx) {
+  activeThemeIdx = idx;
+  localStorage.setItem('ptg_theme', idx);
+  if (idx < 0) {
+    stopTheme();
+  } else {
+    playTheme(idx);
+  }
+  updateThemeBtn();
+}
+
+function playTheme(idx) {
   if (!audioTracks[idx]) return;
-  currentTrackIdx = idx;
-  localStorage.setItem('ptg_audio_track', idx);
   const audio = document.getElementById('bg-audio');
   if (!audio) return;
   audio.src = audioTracks[idx].url;
-  audio.volume = parseFloat(document.getElementById('audio-vol')?.value || 0.5);
-  // Mettre à jour le nom immédiatement
-  const nameEl = document.getElementById('audio-track-name');
-  if (nameEl) nameEl.textContent = audioTracks[idx].name;
-  if (autoplay) {
-    audio.play()
-      .then(() => { isPlaying = true; updatePlayBtn(); updateMusicHeaderBtn(); })
-      .catch(e => console.warn('Audio play error:', e));
-  } else {
-    // Même sans autoplay, mettre à jour l'état visuel
-    isPlaying = false;
-    updatePlayBtn();
-    updateMusicHeaderBtn();
-  }
-  renderAudioTracks();
+  audio.loop = true;
+  audio.volume = 0.5;
+  audio.play().catch(() => {});
 }
 
-function togglePlay() {
+function stopTheme() {
   const audio = document.getElementById('bg-audio');
-  if (!audio) return;
-  if (!audio.src && audioTracks.length) { loadTrack(0, true); return; }
-  if (audio.paused) {
-    audio.play().then(() => { isPlaying = true; updatePlayBtn(); updateMusicHeaderBtn(); }).catch(()=>{});
-  } else {
-    audio.pause();
-    isPlaying = false;
-    updatePlayBtn();
-    updateMusicHeaderBtn();
-  }
+  if (audio) { audio.pause(); audio.src = ''; }
 }
 
-function prevTrack() {
-  const n = audioTracks.length;
-  if (!n) return;
-  loadTrack((currentTrackIdx - 1 + n) % n, true);
-}
-
-function nextTrack() {
-  const n = audioTracks.length;
-  if (!n) return;
-  loadTrack((currentTrackIdx + 1) % n, true);
-}
-
-function setVolume(v) {
-  const audio = document.getElementById('bg-audio');
-  if (audio) audio.volume = parseFloat(v);
-}
-
-function updatePlayBtn() {
-  const btn = document.getElementById('audio-play-btn');
-  if (btn) btn.textContent = isPlaying ? '⏸' : '▶';
-}
-
-function updateMusicHeaderBtn() {
+function updateThemeBtn() {
   const btn = document.getElementById('music-toggle-btn');
   const lbl = document.getElementById('music-btn-label');
   if (!btn) return;
-  if (isPlaying && currentTrackIdx >= 0 && audioTracks[currentTrackIdx]) {
+  if (activeThemeIdx >= 0 && audioTracks[activeThemeIdx]) {
     btn.className = 'music-header-btn playing';
-    if (lbl) lbl.textContent = audioTracks[currentTrackIdx].name;
+    if (lbl) lbl.textContent = audioTracks[activeThemeIdx].name;
   } else {
     btn.className = 'music-header-btn';
-    if (lbl) lbl.textContent = 'Musique';
+    if (lbl) lbl.textContent = 'Thème';
   }
 }
-
-// Auto-next quand la piste se termine (pas de loop sur la liste, loop sur piste unique)
-document.addEventListener('DOMContentLoaded', () => {
-  const audio = document.getElementById('bg-audio');
-  if (audio) {
-    // Sync bouton play/pause avec l'état réel de l'audio
-    audio.addEventListener('play',  () => { isPlaying = true;  updatePlayBtn(); updateMusicHeaderBtn(); });
-    audio.addEventListener('pause', () => { isPlaying = false; updatePlayBtn(); updateMusicHeaderBtn(); });
-    audio.addEventListener('ended', () => { isPlaying = false; updatePlayBtn(); updateMusicHeaderBtn(); });
-    audio.addEventListener('ended', () => {
-      if (audioTracks.length > 1) nextTrack();
-    });
-  }
-});
 
 // Musique podium
 function playPodiumMusic() {
   if (!podiumUrl) return;
-  const audio = document.getElementById('podium-audio');
-  if (!audio) return;
-  // Mettre en pause la musique d'ambiance
-  const bg = document.getElementById('bg-audio');
-  if (bg && !bg.paused) { bg.pause(); }
-  audio.src = podiumUrl;
-  audio.volume = parseFloat(document.getElementById('audio-vol')?.value || 0.5);
-  audio.loop = true;
-  audio.play().catch(()=>{});
+  const audio = document.getElementById('bg-audio');
+  const pod   = document.getElementById('podium-audio');
+  if (audio) audio.volume = 0.2; // baisser l'ambiance
+  if (pod)   { pod.src = podiumUrl; pod.volume = 0.8; pod.play().catch(()=>{}); }
 }
-
 function stopPodiumMusic() {
-  const audio = document.getElementById('podium-audio');
-  if (audio) { audio.pause(); audio.currentTime = 0; }
-  // Reprendre ambiance si elle était en cours
-  const bg = document.getElementById('bg-audio');
-  if (bg && bg.src && isPlaying) bg.play().catch(()=>{});
+  const pod = document.getElementById('podium-audio');
+  if (pod)  { pod.pause(); pod.currentTime = 0; }
+  const audio = document.getElementById('bg-audio');
+  if (audio) audio.volume = 0.5; // remonter l'ambiance
 }
 
-// ============================================================
-//  ADMIN MUSIQUES
-// ============================================================
-function renderAdminMusic() {
-  // Podium URL
-  db.ref(REF + '/audio/podium_url').once('value', snap => {
-    const el = document.getElementById('admin-podium-url');
-    if (el) el.value = snap.val() || '';
-  });
-  // Tracks
-  renderAdminTracks();
-}
-
-function renderAdminTracks() {
-  db.ref(REF + '/audio/tracks').once('value', snap => {
-    const tracks = snap.val() || {};
-    const list = document.getElementById('admin-tracks-list');
-    if (!list) return;
-    const arr = Object.entries(tracks).sort((a,b) => (a[1].order||0)-(b[1].order||0));
-    if (!arr.length) {
-      list.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 0">Aucune piste ajoutée.</div>';
-      return;
-    }
-    list.innerHTML = arr.map(([id, t]) => `
-      <div class="admin-settings-card" style="margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <input class="field" style="flex:1;font-size:13px;padding:7px 12px" value="${t.name}"
-            placeholder="Nom de la piste..." id="track-name-${id}"
-            onchange="saveTrack('${id}')">
-          <button class="btn btn-danger btn-sm" onclick="deleteTrack('${id}')">✕</button>
-        </div>
-        <div class="admin-label">URL du fichier MP3</div>
-        <input class="field" style="font-size:12px;padding:7px 12px" value="${t.url}"
-          placeholder="https://..." id="track-url-${id}"
-          onchange="saveTrack('${id}')">
-      </div>`).join('');
-  });
-}
-
-function addTrack() {
-  const id = 'track_' + Date.now();
-  const order = Date.now();
-  db.ref(REF + '/audio/tracks/' + id).set({ name: 'Nouvelle piste', url: '', order })
-    .then(() => { renderAdminTracks(); loadAudioConfig(); });
-}
-
-function saveTrack(id) {
-  const name = document.getElementById('track-name-' + id)?.value.trim();
-  const url  = document.getElementById('track-url-'  + id)?.value.trim();
-  if (name !== undefined && url !== undefined) {
-    db.ref(REF + '/audio/tracks/' + id).update({ name, url })
-      .then(() => { toast('Piste sauvegardée !'); loadAudioConfig(); });
-  }
-}
-
-function deleteTrack(id) {
-  if (!confirm('Supprimer cette piste ?')) return;
-  db.ref(REF + '/audio/tracks/' + id).remove()
-    .then(() => { renderAdminTracks(); loadAudioConfig(); });
-}
-
-function savePodiumMusic(url) {
-  db.ref(REF + '/audio/podium_url').set(url.trim())
-    .then(() => { podiumUrl = url.trim(); toast('Musique podium sauvegardée !'); });
-}
-
-// ============================================================
-//  LANCEUR DE DÉS
-// ============================================================
-const DICE_SIDES = { D4:4, D6:6, D8:8, D10:10, D12:12, D20:20 };
-let diceState = { type: 'D6', count: 1 };
-
-function initDiceView() {
-  selectDice(diceState.type);
-  selectDiceCount(diceState.count);
-}
-
-function selectDice(type) {
-  diceState.type = type;
-  Object.keys(DICE_SIDES).forEach(d => {
-    const btn = document.getElementById('dice-btn-' + d);
-    if (btn) {
-      btn.className = 'btn ' + (d === type ? 'btn-primary' : 'btn-glass');
-      btn.style.cssText = "flex:1;min-width:60px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em";
-    }
-  });
-}
-
-function selectDiceCount(n) {
-  diceState.count = n;
-  for (let i = 1; i <= 6; i++) {
-    const btn = document.getElementById('dice-count-' + i);
-    if (btn) {
-      btn.className = 'btn ' + (i === n ? 'btn-primary' : 'btn-glass');
-      btn.style.flex = '1';
-      btn.style.fontSize = '15px';
-      btn.style.fontWeight = '700';
-    }
-  }
-}
-
-function rollDice() {
-  const { type, count } = diceState;
-  const sides = DICE_SIDES[type];
-  const facesEl = document.getElementById('dice-faces');
-  const totalEl = document.getElementById('dice-total');
-  if (!facesEl) return;
-
-  // Créer les faces avec animation rolling
-  facesEl.innerHTML = Array.from({length: count}, (_, i) =>
-    `<div class="dice-face rolling" id="dface-${i}">
-      <span id="dval-${i}">?</span>
-      <span class="dice-type-label">${type}</span>
-    </div>`
-  ).join('');
-
-  if (totalEl) { totalEl.style.display = 'none'; }
-
-  // Animer les valeurs pendant 600ms puis révéler
-  const interval = setInterval(() => {
-    for (let i = 0; i < count; i++) {
-      const el = document.getElementById('dval-' + i);
-      if (el) el.textContent = Math.ceil(Math.random() * sides);
-    }
-  }, 80);
-
-  setTimeout(() => {
-    clearInterval(interval);
-    const results = [];
-    for (let i = 0; i < count; i++) {
-      const val = Math.ceil(Math.random() * sides);
-      results.push(val);
-      const face = document.getElementById('dface-' + i);
-      const valEl = document.getElementById('dval-' + i);
-      if (valEl) valEl.textContent = val;
-      if (face) {
-        face.classList.remove('rolling');
-        // Stagger l'animation d'arrivée
-        setTimeout(() => {
-          face.classList.add('landed');
-          // Couleur spéciale pour max
-        }, i * 80);
-      }
-    }
-    // Afficher le total si plusieurs dés
-    if (count > 1 && totalEl) {
-      const sum = results.reduce((a,b) => a+b, 0);
-      totalEl.textContent = '= ' + sum;
-      totalEl.style.display = 'block';
-      setTimeout(() => { totalEl.style.display = 'block'; }, count * 80 + 200);
-    }
-    // Mettre en évidence le max (D20 = 20, etc.)
-    const max = Math.max(...results);
-    results.forEach((val, i) => {
-      if (val === sides) { // valeur max du dé
-        setTimeout(() => {
-          const face = document.getElementById('dface-' + i);
-          if (face) {
-            face.style.borderColor = 'var(--gold)';
-            face.style.background = 'rgba(255,214,10,.15)';
-            face.querySelector('span').style.color = 'var(--gold)';
-          }
-        }, i * 80 + 400);
-      }
-    });
-  }, 600);
-}
+// toggleAudioPlayer / openMusicPicker → alias
+function toggleAudioPlayer() { openThemePicker(); }
+function openMusicPicker()    { openThemePicker(); }
 
 init();
 loadGameImages();
