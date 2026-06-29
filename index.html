@@ -5112,68 +5112,67 @@ function shareSession() {
   `;
 
   card.innerHTML = `
-    <div style="
-      width:400px;
-      background:linear-gradient(160deg,#1e3a5f 0%,#0f2040 45%,#1a1040 100%);
-      border-radius:24px;overflow:hidden;position:relative;
-    ">
-      <!-- Bannière en fond avec overlay -->
-      ${banner ? `
-        <div style="position:absolute;inset:0;
-          background-image:url('${banner}');background-size:cover;background-position:center;
-          filter:brightness(.18) saturate(1.2);z-index:0"></div>
-        <div style="position:absolute;inset:0;
-          background:linear-gradient(160deg,rgba(30,58,95,.92),rgba(26,16,64,.95));z-index:1"></div>
-      ` : ''}
+    <div style="width:400px;background:#0f1829;border-radius:24px;overflow:hidden;font-family:'Inter',sans-serif">
 
-      <div style="position:relative;z-index:2;padding:28px 28px 20px">
-
-        <!-- Badge jeu -->
-        <div style="display:inline-flex;align-items:center;gap:6px;
-          background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
-          border-radius:30px;padding:5px 14px;margin-bottom:20px">
-          <span style="font-size:12px;color:rgba(255,255,255,.8);font-weight:500;letter-spacing:.04em">${s.gameName}</span>
+      <!-- BANNIÈRE EN HAUT -->
+      <div style="height:150px;position:relative;overflow:hidden;background:#1a2a4a">
+        ${banner ? `
+          <div style="position:absolute;inset:0;
+            background-image:url('${banner}');
+            background-size:cover;background-position:center;
+            filter:brightness(.65)"></div>
+          <div style="position:absolute;inset:0;
+            background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(15,24,41,.9) 100%)"></div>
+        ` : `
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a3a6b,#0d1f3c)"></div>
+        `}
+        <!-- Nom du jeu sur la bannière -->
+        <div style="position:absolute;bottom:14px;left:20px;right:20px;display:flex;align-items:flex-end;justify-content:space-between">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;letter-spacing:.08em;
+            text-shadow:0 2px 12px rgba(0,0,0,.8)">${s.gameName}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5)">${date}</div>
         </div>
+      </div>
+
+      <!-- CONTENU -->
+      <div style="padding:20px 20px 16px">
 
         <!-- Gagnant -->
         ${winner ? `
-        <div style="margin-bottom:24px">
-          <div style="font-size:13px;color:#FFD60A;font-weight:600;margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase">
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;color:#FFD60A;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">
             🏆 Vainqueur
           </div>
-          <div style="font-size:48px;font-weight:900;color:#fff;line-height:1;
-            text-shadow:0 4px 30px rgba(255,214,10,.4);letter-spacing:-.02em">
+          <div style="font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em">
             ${winner.name}
           </div>
-          <div style="font-size:22px;font-weight:700;color:#FFD60A;margin-top:4px">
+          <div style="font-size:24px;font-weight:800;color:#FFD60A;margin-top:6px">
             ${winner.total} pts
           </div>
         </div>
         ` : ''}
 
         <!-- Séparateur -->
-        <div style="height:1px;background:rgba(255,255,255,.1);margin-bottom:16px"></div>
+        <div style="height:1px;background:rgba(255,255,255,.08);margin-bottom:14px"></div>
 
         <!-- Autres joueurs -->
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
+        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:18px">
           ${others.map((r, i) => `
             <div style="display:flex;align-items:center;gap:10px;
-              background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
-              border-radius:12px;padding:10px 14px">
+              background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
+              border-radius:12px;padding:9px 13px">
               <span style="font-size:16px;min-width:22px">${rankEmojis[i+1] || (i+2)+'.'}</span>
-              <span style="flex:1;font-size:15px;font-weight:600;color:rgba(255,255,255,.85)">${r.name}</span>
-              <span style="font-size:16px;font-weight:700;color:rgba(255,255,255,.55)">${r.total} pts</span>
+              <span style="flex:1;font-size:14px;font-weight:600;color:rgba(255,255,255,.8)">${r.name}</span>
+              <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,.45)">${r.total} pts</span>
             </div>
           `).join('')}
         </div>
 
         <!-- Footer -->
         <div style="display:flex;justify-content:space-between;align-items:center;
-          padding-top:14px;border-top:1px solid rgba(255,255,255,.08)">
-          <span style="font-size:12px;color:rgba(255,255,255,.3);letter-spacing:.08em;font-weight:600">
-            PTG · BOARD GAMES
-          </span>
-          <span style="font-size:12px;color:rgba(255,255,255,.3)">${date}</span>
+          padding-top:12px;border-top:1px solid rgba(255,255,255,.07)">
+          <span style="font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.1em;font-weight:700">PTG · BOARD GAMES</span>
+          <span style="font-size:11px;color:rgba(255,255,255,.25)">${s.players?.length || 0} joueurs</span>
         </div>
 
       </div>
