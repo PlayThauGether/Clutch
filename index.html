@@ -4403,12 +4403,17 @@ function loadAudioConfig() {
     const data = snap.val() || {};
     audioTracks = Object.values(data.tracks || {}).sort((a,b) => (a.order||0)-(b.order||0));
     podiumUrl   = data.podium_url || '';
-    // Restaurer le thème sauvegardé
+    // Restaurer le thème sauvegardé, sinon démarrer le premier thème de la liste
     const saved = parseInt(localStorage.getItem('ptg_theme') || '-1');
     if (saved >= 0 && audioTracks[saved]) {
       activeThemeIdx = saved;
       playTheme(saved);
-      updateThemeBtn();
+    } else if (audioTracks.length > 0) {
+      // Chercher "Medieval Tavern" en premier, sinon prendre le premier thème
+      const medievalIdx = audioTracks.findIndex(t => t.name.toLowerCase().includes('medieval'));
+      const defaultIdx = medievalIdx >= 0 ? medievalIdx : 0;
+      activeThemeIdx = defaultIdx;
+      playTheme(defaultIdx);
     }
   });
 }
