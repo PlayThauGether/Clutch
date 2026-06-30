@@ -708,6 +708,19 @@ body::before {
   .agr-field, .agr-player-head { width: 48px; }
   .sk-field { width: 44px; }
 }
+@media (max-width:480px) {
+  .header-inner {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .logo { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+}
 </style>
 </head>
 <body>
@@ -718,7 +731,7 @@ body::before {
   <header class="header">
     <div class="header-inner">
       <div class="logo">CLUTCH<span class="logo-sub">by Play Thau'Gether</span></div>
-      <div style="display:flex;align-items:center;gap:8px">
+      <div class="header-actions" style="display:flex;align-items:center;gap:8px">
         <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.3);border-radius:20px;padding:6px 12px;color:#64D2FF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
           Installer
         </button>
