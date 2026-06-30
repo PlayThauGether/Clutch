@@ -3942,10 +3942,11 @@ function finishGame(gameId) {
     results = players.map(p => {
       const d = data.scores[p.id];
       const sciPts = sw7ScienceScore(d.roue, d.compas, d.tablette);
-      const total = (parseInt(d.militaire)||0) + (parseInt(d.tresor_pts)||0) +
+      const tresorPts = Math.floor((parseInt(d.tresor)||0) / 3);
+      const total = (parseInt(d.militaire)||0) + tresorPts +
         (parseInt(d.merveille)||0) + (parseInt(d.civil)||0) +
         (parseInt(d.commercial)||0) + (parseInt(d.guildes)||0) + sciPts;
-      return { ...p, total, sciPts };
+      return { ...p, total, sciPts, tresorPts };
     }).sort((a, b) => b.total - a.total);
   }
 
@@ -4290,9 +4291,9 @@ function renderHistory() {
 }
 
 const SCORE_LABELS = {
-  agricola:     { champs:'Champs', paturages:'Pâturages', cereales:'Céréales', legumes:'Légumes', moutons:'Moutons', sangliers:'Sangliers', boeufs:'Bœufs', etables:'Étables', cases_vides:'Cases vides', habitation:'Habitation', membres:'Membres famille', amenagements:'Aménagements', points_speciaux:'Pts spéciaux', mendicite:'Mendicité' },
+  agricola:     { champs:'Champs', paturages:'Pâturages', cereales:'Céréales', legumes:'Légumes', moutons:'Moutons', sangliers:'Sangliers', boeufs:'Bœufs', stables:'Étables', cases_vides:'Cases vides', habitation:'Habitation', membres:'Membres famille', amenagements:'Aménagements', speciaux:'Pts spéciaux', mendicite:'Mendicité' },
   dewan:        { histoire:'Tuiles Histoire', feu:'Feu', groupes:'Groupes camps', baies:'Baies', terrain:'Terrain (départage)' },
-  seven_wonders:{ militaire:'Militaire', trésor:'Trésor', merveille:'Merveille', civil:'Civil', commercial:'Commercial', guildes:'Guildes', science_roues:'Roues', science_compas:'Compas', science_tablettes:'Tablettes' },
+  seven_wonders:{ militaire:'Militaire', tresor:'Trésor (pièces)', merveille:'Merveille', civil:'Civil', commercial:'Commercial', guildes:'Guildes', roue:'Science — Roues', compas:'Science — Compas', tablette:'Science — Tablettes (total)' },
   wingspan:     { oiseaux:'Oiseaux', bonus:'Carte Bonus', objectifs:'Objectifs', oeufs:'Œufs', nourriture:'Nourriture', cartes_gl:'Cartes glissées' },
   iaww:         { bruts:'PV bruts', combos:'Combos', generaux:'Généraux', financiers:'Financiers', cartes_emp:'Cartes Empire' },
   pillards:     { pv_partie:'PV partie', valkyrie:'Valkyrie', armement:'Armement', offrandes:'Offrandes', equipage:'Équipage', or:'Or', fer:'Fer', betail:'Bétail' },
@@ -4301,6 +4302,7 @@ const SCORE_LABELS = {
   citadelles:   { quartiers:'Quartiers', cinq_couleurs:'5 couleurs (+3)', premier_8:'Premier 8 (+4)', autre_8:'Autres 8 (+2)' },
   viva_catrina: { ballons_rouge:'Ballons Rouges', ballons_bleu:'Ballons Bleus', ballons_vert:'Ballons Verts', ballons_jaune:'Ballons Jaunes', visiteurs:'Visiteurs', papillons:'Papillons', chimeres5:'Chimères 5pts', chimeres3:'Chimères 3pts', echoppes:'Échoppes', autels:'Autels' },
   faraway:      { carte1:'Carte 1', carte2:'Carte 2', carte3:'Carte 3', carte4:'Carte 4', carte5:'Carte 5', carte6:'Carte 6', carte7:'Carte 7', carte8:'Carte 8', sanctuaires:'Sanctuaires' },
+  conspiracy:   { seigneurs:'Seigneurs', lieux:'Lieux', coalition:'Coalition', maitre_perles:'Maître des Perles', perles:'Perles (départage)' },
   kingdomino:   {},
 };
 
@@ -4321,6 +4323,38 @@ function renderDetailContent(s, opts) {
     const pid = r.id;
     const d = s.data?.scores?.[pid] || {};
     const gid = s.gameId;
+
+    // Cas spécial Kingdomino : domaines stockés en JSON, format incompatible avec le système générique
+    if (gid === 'kingdomino') {
+      let domaines = [];
+      try { domaines = JSON.parse(d.domaines || '[]'); } catch(e) { domaines = []; }
+      const opts = s.data?.options || {};
+      const rows = [];
+      domaines.forEach((dom, i) => {
+        const cases = parseInt(dom.cases) || 0;
+        const couronnes = parseInt(dom.couronnes) || 0;
+        if (!cases && !couronnes) return; // ignorer les domaines vides
+        const pts = cases * couronnes;
+        rows.push(`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="flex:1;color:var(--text-2)">Domaine ${i+1} (${cases} cases × ${couronnes} couronnes)</span>
+          <span style="color:var(--accent);font-weight:700;font-size:11px">+${pts} pts</span>
+        </div>`);
+      });
+      if (opts.empire_milieu && d.chateau_centre === 'oui') {
+        rows.push(`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="flex:1;color:var(--text-2)">Empire du milieu (château centré)</span>
+          <span style="color:var(--accent);font-weight:700;font-size:11px">+10 pts</span>
+        </div>`);
+      }
+      if (opts.harmonie && d.grille_complete === 'oui') {
+        rows.push(`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="flex:1;color:var(--text-2)">Harmonie (grille complète)</span>
+          <span style="color:var(--accent);font-weight:700;font-size:11px">+5 pts</span>
+        </div>`);
+      }
+      return rows.join('');
+    }
+
     const entries = Object.entries(labels).filter(([k]) => d[k] !== undefined && d[k] !== '' && d[k] !== 'non');
     if (!entries.length) return '';
     return entries.map(([k, label]) => {
@@ -4330,14 +4364,7 @@ function renderDetailContent(s, opts) {
       // Calculer les pts selon le jeu et le champ
       let pts = null;
       if (gid === 'agricola') {
-        const AGRS = { champs:[[0,0],[1,1],[2,2],[3,3],[4,4]], paturages:[[0,0],[1,1],[2,2],[3,3],[4,4]], cereales:[[0,0],[1,1],[2,2],[3,3],[4,4],[5,4]], legumes:[[0,0],[1,1],[2,2],[3,3],[4,4]], moutons:[[0,0],[1,1],[2,2],[3,3],[4,4],[5,4]], sangliers:[[0,0],[1,1],[2,2],[3,3],[4,4],[5,4]], boeufs:[[0,0],[1,1],[2,2],[3,3],[4,4]] };
-        const tbl = AGRS[k];
-        if (tbl) { const row = [...tbl].reverse().find(([q]) => qty >= q); pts = row ? row[1] : 0; }
-        else if (k==='etables') pts = qty;
-        else if (k==='cases_vides') pts = -qty;
-        else if (k==='membres') pts = qty * 3;
-        else if (k==='mendicite') pts = -qty * 3;
-        else pts = qty;
+        pts = agrScore(k, qty); // réutilise la même fonction que le calcul du score final (source unique de vérité)
       } else if (gid === 'dewan') {
         if (k==='groupes') pts = qty * 4;
         else if (k==='baies') pts = qty * 2;
@@ -4352,6 +4379,7 @@ function renderDetailContent(s, opts) {
       } else if (gid === 'pillards') {
         const VK = [0,1,2,4,6,9,12,15];
         if (k==='valkyrie') pts = VK[Math.min(7,qty)] || 0;
+        else if (k==='armement') pts = Math.min(10, qty);
         else if (k==='betail') pts = Math.floor(qty/2);
         else pts = qty;
       } else if (gid === 'maraudeurs') {
@@ -4376,6 +4404,20 @@ function renderDetailContent(s, opts) {
         if (k==='coalition') pts = qty * 3;
         else if (k==='perles') pts = null; // départage
         else pts = qty;
+      } else if (gid === 'seven_wonders') {
+        if (k==='tresor') pts = Math.floor(qty / 3);
+        else if (k==='roue' || k==='compas') pts = null; // affiché groupé sur "tablette"
+        else if (k==='tablette') {
+          const r = parseInt(d.roue)||0, c = parseInt(d.compas)||0, t = parseInt(d.tablette)||0;
+          pts = (r*r) + (c*c) + (t*t) + (Math.min(r,c,t) * 7); // total Science combiné
+        }
+        else pts = qty; // militaire, merveille, civil, commercial, guildes = direct
+      } else if (gid === 'iaww') {
+        if (k==='cartes_emp') pts = null; // départage
+        else pts = qty; // bruts, combos, generaux, financiers = direct
+      } else if (gid === 'faraway') {
+        if (k==='tiebreak') pts = null; // départage
+        else pts = qty; // cartes + sanctuaires = direct
       }
 
       const ptsStr = pts !== null ? `<span style="color:${pts<0?'var(--red)':'var(--accent)'}; font-weight:700; font-size:11px; margin-left:6px">${pts>=0?'+':''}${pts} pts</span>` : '';
