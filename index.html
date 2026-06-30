@@ -392,22 +392,6 @@ body::before {
 .total-pill-bar { height: 2px; background: rgba(255,255,255,.1); border-radius: 2px; margin-top: 5px; }
 .total-pill-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
 
-/* ---- PODIUM ---- */
-.podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin: 16px 0; }
-.podium-item { flex: 1; max-width: 110px; display: flex; flex-direction: column; align-items: center; }
-.podium-bar {
-  width: 100%; border-radius: 12px 12px 0 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-  padding-bottom: 8px; border: 1px solid var(--border); border-bottom: none;
-}
-.podium-bar.p1 { min-height: 90px; background: rgba(255,214,10,.12); border-color: rgba(255,214,10,.35); }
-.podium-bar.p2 { min-height: 65px; background: var(--glass); }
-.podium-bar.p3 { min-height: 45px; background: var(--glass); }
-.podium-bar.pN { min-height: 35px; background: rgba(255,255,255,.03); }
-.podium-medal { font-size: 18px; margin-bottom: 2px; }
-.podium-score { font-size: 14px; font-weight: 700; }
-.podium-name { font-size: 11px; color: var(--text-2); margin-top: 5px; text-align: center; }
-
 /* ---- HISTORY ---- */
 .history-row {
   display: flex; align-items: center; gap: 12px;
@@ -574,62 +558,11 @@ body::before {
 .rev-vcard { cursor: default; }
 .rev-winner { box-shadow: 0 0 0 rgba(255,214,10,0); transition: opacity .5s ease, transform .5s ease, box-shadow .6s ease !important; }
 
-/* ---- AUDIO PLAYER ---- */
-.audio-player {
-  position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-  z-index: 900; width: calc(100% - 32px); max-width: 420px;
-  background: rgba(13,22,41,.97); border: 1px solid rgba(255,255,255,.15);
-  border-radius: 20px; padding: 14px 16px;
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 40px rgba(0,0,0,.5);
-  display: none; flex-direction: column; gap: 10px;
-}
-.audio-player.open { display: flex; }
 .audio-track-name {
   font-family: 'Bebas Neue', sans-serif; font-size: 16px;
   letter-spacing: .06em; color: var(--text); text-align: center;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.audio-controls { display: flex; align-items: center; gap: 10px; justify-content: center; }
-.audio-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--glass-md); border: 1px solid var(--border);
-  color: var(--text); font-size: 16px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .2s; flex-shrink: 0;
-}
-.audio-btn:hover { background: var(--glass-hi); border-color: var(--accent); }
-.audio-btn.play-btn {
-  width: 44px; height: 44px; font-size: 20px;
-  background: var(--accent); border-color: var(--accent); color: #0a1628;
-}
-.audio-btn.play-btn:hover { opacity: .85; }
-.audio-volume {
-  display: flex; align-items: center; gap: 8px;
-}
-.audio-vol-icon { font-size: 14px; color: var(--text-2); }
-.audio-vol-slider { flex: 1; accent-color: var(--accent); }
-.audio-tracks-list {
-  max-height: 160px; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 4px;
-  border-top: 1px solid rgba(255,255,255,.08); padding-top: 8px;
-}
-.audio-track-item {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 8px; border-radius: 10px; cursor: pointer;
-  transition: background .15s;
-}
-.audio-track-item:hover { background: var(--glass-md); }
-.audio-track-item.active { background: rgba(100,210,255,.1); }
-.audio-track-item.active .audio-track-item-name { color: var(--accent); }
-.audio-track-item-ico { font-size: 14px; color: var(--text-2); }
-.audio-track-item-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
-.audio-header-btn {
-  background: none; border: none; cursor: pointer;
-  font-size: 18px; color: rgba(255,255,255,.5);
-  padding: 4px; transition: color .2s;
-}
-.audio-header-btn:hover { color: var(--text); }
 /* Bouton music dans le header */
 .music-header-btn {
   background: var(--glass-md); border: 1px solid var(--border);
@@ -640,38 +573,6 @@ body::before {
 }
 .music-header-btn:hover { border-color: var(--accent); color: var(--accent); }
 .music-header-btn.playing { border-color: var(--accent); color: var(--accent); background: rgba(100,210,255,.08); }
-
-/* ---- AUDIO PLAYER ---- */
-.audio-bar {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  z-index: 400;
-  background: rgba(13,22,41,.92);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255,255,255,.1);
-  padding: 10px 16px 10px;
-  padding-bottom: max(10px, env(safe-area-inset-bottom));
-  display: none;
-  align-items: center; gap: 10px;
-  transition: transform .3s ease;
-}
-.audio-bar.visible { display: flex; }
-.audio-track-name {
-  flex: 1; font-size: 12px; font-weight: 600;
-  color: var(--text); white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-  min-width: 0;
-}
-.audio-track-sub { font-size: 10px; color: var(--text-2); }
-.audio-btn {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--glass-md); border: 1px solid var(--border);
-  color: var(--text); font-size: 14px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .15s; flex-shrink: 0;
-}
-.audio-btn:hover { background: var(--glass-hi); border-color: var(--accent); }
-.audio-btn.playing { background: rgba(100,210,255,.15); border-color: var(--accent); color: var(--accent); }
-.audio-volume { width: 64px; accent-color: var(--accent); flex-shrink: 0; }
 
 /* ---- DÉS ---- */
 @keyframes diceRoll {
@@ -823,7 +724,7 @@ body::before {
           ♪ <span id="music-btn-label">Thème</span>
         </button>
         <div id="auth-btn-wrap">
-          <button id="auth-btn" onclick="toggleAuth()"
+          <button onclick="toggleAuth()"
             style="background:var(--glass-md);border:1px solid var(--border);border-radius:20px;padding:6px 13px;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s">
             Connexion
           </button>
@@ -879,27 +780,12 @@ body::before {
     <!-- GAME -->
     <section class="view" id="view-game"></section>
 
-    <!-- RESULTS -->
-    <section class="view" id="view-results">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 16px">
-        <div>
-          <div style="font-size:22px;font-weight:700;letter-spacing:-.02em" id="res-title"></div>
-          <div style="font-size:13px;color:var(--text-2);margin-top:2px" id="res-sub"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="podium" id="podium"></div>
-        <div id="full-results"></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="btn btn-glass" style="flex:1" onclick="newGame()">Nouvelle partie</button>
-        <button class="btn btn-primary" style="flex:1" onclick="saveAndFinish()">Sauvegarder</button>
-      </div>
-    </section>
-
     <!-- HISTORY -->
     <section class="view" id="view-history">
-      <div class="section-title">Parties jouées</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="section-title" style="margin:0">Parties jouées</div>
+        <button class="btn btn-glass btn-sm" onclick="openImportCode()">+ Importer un code</button>
+      </div>
       <div id="history-list" style="display:flex;flex-direction:column;gap:8px"></div>
     </section>
 
@@ -1335,7 +1221,6 @@ function selectGame(id) {
 // ============================================================
 //  QUICK PLAYERS (sans compte, juste un prénom)
 // ============================================================
-const EMOJIS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 
 function addQuickPlayer() {
   const inp = document.getElementById('new-player-input');
@@ -4079,6 +3964,13 @@ function closeReveal() {
 
 
 
+function generateShareCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans I/O/0/1 pour éviter confusion
+  let code = '';
+  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 function saveAndFinish() {
   if (!session) return;
   if (!currentUser) {
@@ -4089,12 +3981,63 @@ function saveAndFinish() {
   const s = { ...session, savedAt: new Date().toISOString(), userId: currentUser.uid };
   sessions.push(s); saveLocal();
   db.ref(REF + '/users/' + currentUser.uid + '/sessions/' + s.id).set(s);
-  toast('Partie sauvegardee !');
+
+  // Générer un code de partage léger (juste une référence, pas de copie)
+  const code = generateShareCode();
+  const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
+  db.ref(REF + '/shared_codes/' + code).set({
+    sessionId: s.id,
+    ownerUid: currentUser.uid,
+    createdByName: currentUser.displayName || 'Un joueur',
+    expiresAt
+  });
+
   session = null; selectedGameId = null; quickPlayers = [];
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('session-setup').style.display = 'none';
   renderQuickPlayers();
-  setTimeout(() => showView('history'), 800);
+
+  showShareCodeModal(code, s);
+}
+
+function showShareCodeModal(code, s) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'modal-sharecode';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div style="text-align:center;padding:8px 0 4px">
+        <div style="font-size:36px;margin-bottom:8px">✅</div>
+        <div class="modal-title" style="margin-bottom:4px">Partie sauvegardée !</div>
+        <div style="font-size:13px;color:var(--text-2);margin-bottom:20px">
+          Donne ce code aux autres joueurs pour qu'ils ajoutent cette partie à leur propre historique
+        </div>
+        <div style="background:var(--glass-md);border:1px solid var(--accent);border-radius:var(--r-lg);
+          padding:18px;margin-bottom:16px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:.15em;color:var(--accent)">
+            ${code}
+          </div>
+        </div>
+        <button class="btn btn-glass btn-full" onclick="copyShareCode('${code}')" style="margin-bottom:8px">
+          📋 Copier le code
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-full" onclick="closeShareCodeModal()">Terminé</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function copyShareCode(code) {
+  navigator.clipboard.writeText(code).then(() => toast('Code copié !'));
+}
+
+function closeShareCodeModal() {
+  const o = document.getElementById('modal-sharecode');
+  if (o) o.remove();
+  showView('history');
 }
 
 function newGame() {
@@ -4534,7 +4477,6 @@ function renderCounters() {
 let starCount = 0, starTimer = null;
 let adminUser = null;
 const auth = firebase.auth();
-const ADMIN_EMAIL = null; // premier compte Google qui se connecte devient admin
 
 function starClick() {
   starCount++;
@@ -5217,6 +5159,113 @@ function shareSession() {
       toast('Erreur lors de la génération');
     });
   }, 300);
+}
+
+// ============================================================
+//  IMPORT VIA CODE
+// ============================================================
+function openImportCode() {
+  if (!currentUser) {
+    openLoginPanel();
+    toast('Connecte-toi pour importer une partie !');
+    return;
+  }
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'modal-import';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Importer une partie</div>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px">
+        Entre le code à 5 caractères donné par un autre joueur pour ajouter sa partie à ton historique.
+      </p>
+      <input type="text" id="import-code-input" maxlength="5" placeholder="EX: 7K2P9"
+        style="width:100%;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:32px;
+        letter-spacing:.2em;text-transform:uppercase;background:var(--glass-md);
+        border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;color:var(--text);
+        font-family:inherit;box-sizing:border-box;margin-bottom:12px"
+        oninput="this.value=this.value.toUpperCase()">
+      <div id="import-status" style="font-size:13px;color:var(--red);min-height:18px;margin-bottom:8px"></div>
+      <div class="modal-actions">
+        <button class="btn btn-glass btn-sm" onclick="closeImportModal()">Annuler</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmImportCode()">Importer</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('import-code-input')?.focus(), 200);
+}
+
+function closeImportModal() {
+  const o = document.getElementById('modal-import');
+  if (o) o.remove();
+}
+
+function confirmImportCode() {
+  const input = document.getElementById('import-code-input');
+  const status = document.getElementById('import-status');
+  const code = (input?.value || '').trim().toUpperCase();
+  if (code.length !== 5) {
+    if (status) status.textContent = 'Le code doit faire 5 caractères';
+    return;
+  }
+  if (status) status.textContent = 'Recherche...';
+
+  const codeRef = db.ref(REF + '/shared_codes/' + code);
+  codeRef.once('value', snap => {
+    const meta = snap.val();
+    if (!meta) {
+      if (status) status.textContent = 'Code introuvable ou expiré';
+      return;
+    }
+    if (meta.expiresAt && Date.now() > meta.expiresAt) {
+      if (status) status.textContent = 'Ce code a expiré';
+      codeRef.remove(); // nettoyage opportuniste
+      return;
+    }
+    // Empêcher d'importer sa propre partie
+    if (meta.ownerUid === currentUser.uid) {
+      if (status) status.textContent = 'Tu ne peux pas importer ta propre partie';
+      return;
+    }
+    // Vérifier si déjà importée
+    const alreadyImported = sessions.some(s => s.importedFrom === code);
+    if (alreadyImported) {
+      if (status) status.textContent = 'Tu as déjà importé cette partie';
+      return;
+    }
+
+    // Aller chercher la vraie session chez le propriétaire
+    db.ref(REF + '/users/' + meta.ownerUid + '/sessions/' + meta.sessionId).once('value', sessSnap => {
+      const original = sessSnap.val();
+      if (!original) {
+        if (status) status.textContent = 'Partie introuvable (peut-être supprimée)';
+        return;
+      }
+
+      const imported = {
+        ...original,
+        id: 'imp_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+        userId: currentUser.uid,
+        importedFrom: code,
+        importedFromName: meta.createdByName || 'un joueur',
+        savedAt: new Date().toISOString()
+      };
+
+      sessions.push(imported); saveLocal();
+      db.ref(REF + '/users/' + currentUser.uid + '/sessions/' + imported.id).set(imported);
+
+      // Nettoyage : supprimer le code après usage pour ne pas gonfler Firebase
+      codeRef.remove();
+
+      closeImportModal();
+      toast('Partie importée depuis ' + (meta.createdByName || 'un joueur') + ' !');
+      renderHistory();
+      renderStats();
+    });
+  }).catch(err => {
+    if (status) status.textContent = 'Erreur : ' + err.message;
+  });
 }
 
 init();
