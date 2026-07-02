@@ -104,8 +104,8 @@ body::before {
 
 /* ---- HEADER ---- */
 .header { padding: max(env(safe-area-inset-top),16px) 20px 0; flex-shrink: 0; }
-.header-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 10px; }
-.logo { font-size: 17px; font-weight: 700; letter-spacing: .06em; font-family: 'Bebas Neue', sans-serif; display: flex; align-items: baseline; gap: 7px; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 12px; }
+.logo { font-size: 17px; font-weight: 700; letter-spacing: .06em; font-family: 'Bebas Neue', sans-serif; display: flex; align-items: flex-start; flex-direction: column; gap: 1px; }
 .logo-sub { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0; color: var(--text-3); white-space: nowrap; }
 
 /* ---- NAV ---- */
@@ -782,9 +782,9 @@ body::before {
       <div class="logo" style="display:flex;flex-direction:column;align-items:flex-start;gap:1px">
           <img src="https://playthaugether.github.io/PTG-Board-Game/Clutch_Mot_Logo.png"
                alt="CLUTCH"
-               style="height:44px;width:auto;object-fit:contain;display:block"
+               style="height:56px;width:auto;object-fit:contain;display:block"
                onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-          <span style="display:none;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.06em">CLUTCH</span>
+          <span style="display:none;font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.06em">CLUTCH</span>
           <span class="logo-sub" style="display:block">by Play Thau'Gether</span>
         </div>
       <div class="header-actions" style="display:flex;align-items:center;gap:8px">
