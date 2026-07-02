@@ -74,6 +74,12 @@ body {
   font-size: 12px; color: var(--text-3);
   margin-top: 4px; letter-spacing: .02em;
 }
+.splash-img {
+  width: min(280px, 70vw);
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
 .splash-spinner {
   width: 28px; height: 28px; margin-top: 28px;
   border: 2.5px solid rgba(255,255,255,.12);
@@ -757,8 +763,14 @@ body::before {
 <body>
 <!-- SPLASH SCREEN — visible le temps que les images des jeux se chargent -->
 <div id="splash-screen">
-  <div class="splash-logo">CLUTCH</div>
-  <div class="splash-sub">by Play Thau'Gether</div>
+  <img src="https://playthaugether.github.io/PTG-Board-Game/logo_clutch_gros.png"
+       alt="CLUTCH"
+       class="splash-img"
+       onerror="this.style.display='none';document.querySelector('.splash-fallback').style.display='flex'">
+  <div class="splash-fallback" style="display:none;flex-direction:column;align-items:center;gap:6px">
+    <div class="splash-logo">CLUTCH</div>
+    <div class="splash-sub">by Play Thau'Gether</div>
+  </div>
   <div class="splash-spinner"></div>
 </div>
 <div class="toast" id="toast"></div>
@@ -767,7 +779,13 @@ body::before {
   <!-- HEADER -->
   <header class="header">
     <div class="header-inner">
-      <div class="logo">CLUTCH<span class="logo-sub">by Play Thau'Gether</span></div>
+      <div class="logo" style="display:flex;align-items:center">
+          <img src="https://playthaugether.github.io/PTG-Board-Game/Clutch_Mot_Logo.png"
+               alt="CLUTCH" 
+               style="height:32px;width:auto;object-fit:contain"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <span style="display:none;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.06em">CLUTCH<span class="logo-sub">by Play Thau'Gether</span></span>
+        </div>
       <div class="header-actions" style="display:flex;align-items:center;gap:8px">
         <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.3);border-radius:20px;padding:6px 12px;color:#64D2FF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
           Installer
