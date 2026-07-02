@@ -75,10 +75,10 @@ body {
   margin-top: 4px; letter-spacing: .02em;
 }
 .splash-img {
-  width: min(280px, 70vw);
+  width: min(320px, 80vw);
   height: auto;
   object-fit: contain;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .splash-spinner {
   width: 28px; height: 28px; margin-top: 28px;
@@ -767,7 +767,7 @@ body::before {
        alt="CLUTCH"
        class="splash-img"
        onerror="this.style.display='none';document.querySelector('.splash-fallback').style.display='flex'">
-  <div class="splash-fallback" style="display:none;flex-direction:column;align-items:center;gap:6px">
+  <div class="splash-fallback" style="display:none;flex-direction:column;align-items:center;gap:4px">
     <div class="splash-logo">CLUTCH</div>
     <div class="splash-sub">by Play Thau'Gether</div>
   </div>
@@ -779,12 +779,13 @@ body::before {
   <!-- HEADER -->
   <header class="header">
     <div class="header-inner">
-      <div class="logo" style="display:flex;align-items:center">
+      <div class="logo" style="display:flex;flex-direction:column;align-items:flex-start;gap:1px">
           <img src="https://playthaugether.github.io/PTG-Board-Game/Clutch_Mot_Logo.png"
-               alt="CLUTCH" 
-               style="height:32px;width:auto;object-fit:contain"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <span style="display:none;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.06em">CLUTCH<span class="logo-sub">by Play Thau'Gether</span></span>
+               alt="CLUTCH"
+               style="height:44px;width:auto;object-fit:contain;display:block"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <span style="display:none;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.06em">CLUTCH</span>
+          <span class="logo-sub" style="display:block">by Play Thau'Gether</span>
         </div>
       <div class="header-actions" style="display:flex;align-items:center;gap:8px">
         <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.3);border-radius:20px;padding:6px 12px;color:#64D2FF;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
