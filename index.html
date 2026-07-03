@@ -11,9 +11,8 @@
 <meta name="application-name" content="Clutch">
 <title>Clutch · by Play Thau'Gether</title>
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon-v2.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32-v2.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -51,7 +50,7 @@ body {
   min-height: 100dvh;
 }
 
-/* ---- SPLASH - SCREEN ---- */
+/* ---- SPLASH SCREEN ---- */
 #splash-screen {
   position: fixed; inset: 0; z-index: 99999;
   background:
@@ -832,20 +831,7 @@ body::before {
       <div class="section-title">Choisir un jeu</div>
       <div class="game-grid" id="game-grid"></div>
 
-      <div id="session-setup" style="display:none">
-        <div class="section-title">Joueurs</div>
-        <div class="card">
-          <div class="quick-players" id="quick-players"></div>
-          <div class="add-player-row">
-            <input class="field" id="new-player-input" placeholder="Prénom du joueur..." maxlength="20"
-              onkeydown="if(event.key==='Enter')addQuickPlayer()">
-            <button class="btn btn-glass btn-sm" onclick="addQuickPlayer()">+ Ajouter</button>
-          </div>
-        </div>
-        <button class="btn btn-primary btn-full" id="btn-start" onclick="startGame()" disabled>
-          Lancer la partie →
-        </button>
-      </div>
+      <!-- session-setup remplacé par modal-players -->
     </section>
 
     <!-- GAME -->
@@ -933,6 +919,44 @@ body::before {
 
 <!-- SHARE CARD (caché, utilisé pour la génération image) -->
 <div id="share-card" style="position:fixed;top:-9999px;left:-9999px;z-index:-1;width:400px"></div>
+
+<!-- MODAL: sélection des joueurs -->
+<div class="modal-overlay" id="modal-players">
+  <div class="modal" style="padding:0;overflow:hidden">
+    <div class="modal-handle" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:1"></div>
+
+    <!-- Bannière du jeu -->
+    <div id="players-modal-banner" style="height:110px;position:relative;overflow:hidden;background:#1a2a4a;flex-shrink:0">
+      <div id="players-modal-banner-bg" style="position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.5)"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1),rgba(0,0,0,.65))"></div>
+      <div style="position:absolute;bottom:12px;left:16px;right:16px">
+        <div class="modal-title" id="players-modal-title" style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.06em;color:#fff"></div>
+        <div id="players-modal-desc" style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px"></div>
+      </div>
+    </div>
+
+    <!-- Contenu -->
+    <div style="padding:16px 20px 20px">
+      <!-- Liste joueurs ajoutés -->
+      <div id="players-modal-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
+
+      <!-- Champ ajout -->
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input class="field" id="modal-player-input" placeholder="Prénom du joueur..."
+          maxlength="20" style="flex:1"
+          onkeydown="if(event.key==='Enter')addModalPlayer()">
+        <button class="btn btn-glass btn-sm" onclick="addModalPlayer()" style="flex-shrink:0">+ Ajouter</button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-glass btn-sm" onclick="closeModal('modal-players')">Annuler</button>
+        <button class="btn btn-primary btn-sm" id="modal-start-btn" onclick="startGameFromModal()" disabled>
+          Lancer →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ETOILE CACHEE ADMIN -->
 <div id="star-trigger" onclick="starClick()" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.08);cursor:pointer;user-select:none;z-index:500;padding:8px 16px">⭐</div>
@@ -1286,47 +1310,76 @@ function selectGame(id) {
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('gc-' + id).classList.add('selected');
   quickPlayers = [];
-  renderQuickPlayers();
-  document.getElementById('session-setup').style.display = 'block';
-  updateStartBtn();
+  openPlayersModal(id);
+}
+
+function openPlayersModal(id) {
+  const g = GAMES[id];
+  if (!g) return;
+  document.getElementById('players-modal-title').textContent = g.name;
+  document.getElementById('players-modal-desc').textContent = g.desc + ' · max ' + g.maxPlayers + ' joueurs';
+  // Bannière du jeu
+  const banner = g.img_banner || g.img || '';
+  const bg = document.getElementById('players-modal-banner-bg');
+  if (bg) bg.style.backgroundImage = banner ? `url('${banner}')` : 'none';
+  document.getElementById('modal-player-input').value = '';
+  renderModalPlayers();
+  document.getElementById('modal-players').classList.add('open');
+  setTimeout(() => document.getElementById('modal-player-input').focus(), 200);
 }
 
 // ============================================================
 //  QUICK PLAYERS (sans compte, juste un prénom)
 // ============================================================
 
-function addQuickPlayer() {
-  const inp = document.getElementById('new-player-input');
+function addModalPlayer() {
+  const inp = document.getElementById('modal-player-input');
   const name = inp.value.trim();
   if (!name) return;
   if (quickPlayers.find(p => p.name.toLowerCase() === name.toLowerCase())) return toast('Déjà dans la partie');
   const maxP = (selectedGameId && GAMES[selectedGameId]) ? GAMES[selectedGameId].maxPlayers : 8;
-  if (quickPlayers.length >= maxP) return toast(`Maximum ${maxP} joueurs pour ce jeu`);
+  if (quickPlayers.length >= maxP) return toast('Maximum ' + maxP + ' joueurs pour ce jeu');
   quickPlayers.push({ name, emoji: '' });
   inp.value = '';
   inp.focus();
-  renderQuickPlayers();
-  updateStartBtn();
+  renderModalPlayers();
 }
+
+// Garder addQuickPlayer comme alias pour la compatibilité
+function addQuickPlayer() { addModalPlayer(); }
 
 function removeQuickPlayer(i) {
   quickPlayers.splice(i, 1);
-  renderQuickPlayers();
-  updateStartBtn();
+  renderModalPlayers();
 }
 
-function renderQuickPlayers() {
-  const el = document.getElementById('quick-players');
-  if (!quickPlayers.length) { el.innerHTML = ''; return; }
-  el.innerHTML = quickPlayers.map((p, i) => `
-    <div class="player-tag">
-      <span>${p.name}</span>
-      <button class="tag-rm" onclick="removeQuickPlayer(${i})">×</button>
-    </div>`).join('');
+function renderModalPlayers() {
+  const list = document.getElementById('players-modal-list');
+  const btn = document.getElementById('modal-start-btn');
+  if (!list) return;
+  if (!quickPlayers.length) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--text-2);padding:4px 0">Ajoute au moins 2 joueurs pour lancer</div>';
+  } else {
+    list.innerHTML = quickPlayers.map((p, i) => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r-lg);padding:9px 12px">
+        <span style="flex:1;font-size:14px;font-weight:600">${p.name}</span>
+        <button onclick="removeQuickPlayer(${i})"
+          style="background:none;border:none;color:var(--text-3);font-size:16px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+      </div>`).join('');
+  }
+  if (btn) btn.disabled = quickPlayers.length < 2;
 }
 
+// Alias anciens noms
+function renderQuickPlayers() { renderModalPlayers(); }
 function updateStartBtn() {
-  document.getElementById('btn-start').disabled = quickPlayers.length < 2;
+  const btn = document.getElementById('modal-start-btn');
+  if (btn) btn.disabled = quickPlayers.length < 2;
+}
+
+function startGameFromModal() {
+  closeModal('modal-players');
+  startGame();
 }
 
 // ============================================================
@@ -3648,6 +3701,7 @@ function renderKingdominoManche() {
 
 function renderCurrentManche() {
   if (!session) return;
+  window.scrollTo({ top: 0, behavior: 'instant' });
   if (session.gameId === 'flip7')         renderFlip7Manche();
   if (session.gameId === 'skull_king')    renderSkullKingManche();
   if (session.gameId === 'agricola')      renderAgricolaManche();
@@ -4196,9 +4250,13 @@ function generateShareCode() {
   return code;
 }
 
+let pendingRevealResults = null;
+
 function saveAndFinish() {
   if (!session) return;
   if (!currentUser) {
+    // Sauvegarder les résultats en mémoire avant d'ouvrir le login
+    pendingRevealResults = session.results || null;
     openLoginPanel();
     toast('Connecte-toi pour sauvegarder ta partie !');
     return;
@@ -4219,7 +4277,7 @@ function saveAndFinish() {
 
   session = null; selectedGameId = null; quickPlayers = [];
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('session-setup').style.display = 'none';
+  // modal-players remplace session-setup
   renderQuickPlayers();
 
   showShareCodeModal(code, s);
@@ -4268,7 +4326,7 @@ function closeShareCodeModal() {
 function newGame() {
   session = null; selectedGameId = null; quickPlayers = [];
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('session-setup').style.display = 'none';
+  // modal-players remplace session-setup
   renderQuickPlayers();
   showView('home');
 }
@@ -5026,6 +5084,19 @@ auth.onAuthStateChanged(user => {
   if (user) {
     // Charger les sessions de CET utilisateur depuis Firebase
     loadUserSessions();
+    // Si une connexion vient de se faire pendant le podium, le restaurer
+    const overlay = document.getElementById('reveal-overlay');
+    if (pendingRevealResults) {
+      const r = pendingRevealResults;
+      pendingRevealResults = null;
+      // Fermer le modal de login s'il est ouvert
+      closeModal('modal-auth');
+      // Relancer le podium avec les résultats sauvegardés
+      showResults(r);
+    } else if (overlay) {
+      // Podium déjà affiché, juste fermer le modal login
+      closeModal('modal-auth');
+    }
   }
 });
 
