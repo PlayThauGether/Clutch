@@ -4401,6 +4401,43 @@ function renderDetailContent(s, opts) {
     const d = s.data?.scores?.[pid] || {};
     const gid = s.gameId;
 
+    // Cas spécial Flip7 : scores stockés dans data.manches[i].scores[pid]
+    if (gid === 'flip7') {
+      const manches = s.data?.manches || [];
+      if (!manches.length) return '';
+      return manches.map((m, mi) => {
+        const pts = parseInt(m.scores?.[pid]) || 0;
+        const hasBonus = !!m.bonus?.[pid];
+        const col = pts > 0 ? 'var(--accent)' : 'var(--text-3)';
+        return `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="flex:1;color:var(--text-2)">Manche ${mi + 1}${hasBonus ? ' <span style="color:var(--gold)">⚡ Flip7</span>' : ''}</span>
+          <span style="color:${col};font-weight:700;font-size:11px">${pts > 0 ? '+' : ''}${pts} pts</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Cas spécial Skull King : scores stockés dans data.manches[i].players[pid]
+    if (gid === 'skull_king') {
+      const manches = s.data?.manches || [];
+      if (!manches.length) return '';
+      return manches.map((m, mi) => {
+        const pd = m.players?.[pid] || {};
+        if (pd.mise === '' || pd.plis === '') return '';
+        const mise = parseInt(pd.mise) || 0;
+        const plis = parseInt(pd.plis) || 0;
+        const bonus = parseInt(pd.bonus) || 0;
+        const cards = m.cards || (mi + 1);
+        let pts = 0;
+        if (mise === 0) pts = plis === 0 ? cards * 10 : -(cards * 10);
+        else pts = mise === plis ? mise * 20 + bonus : -(Math.abs(mise - plis) * 10);
+        const col = pts > 0 ? 'var(--accent)' : pts < 0 ? 'var(--red)' : 'var(--text-3)';
+        return `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="flex:1;color:var(--text-2)">Manche ${mi + 1} · Mise ${mise} / Plis ${plis}${bonus ? ' +' + bonus : ''}</span>
+          <span style="color:${col};font-weight:700;font-size:11px">${pts > 0 ? '+' : ''}${pts} pts</span>
+        </div>`;
+      }).join('');
+    }
+
     // Cas spécial Kingdomino : domaines stockés en JSON, format incompatible avec le système générique
     if (gid === 'kingdomino') {
       let domaines = [];
@@ -5418,13 +5455,57 @@ function rollDice() {
 function shareSession() {
   const s = sessions.find(x => x.id === selectedSessId);
   if (!s) return;
-  generateShareCard(s);
+  openSharePicker(s);
 }
 
 function shareLiveResults() {
   if (!session || !session.results) return;
-  // session n'a pas encore de savedAt tant qu'il n'est pas sauvegardé — generateShareCard gère ce cas
-  generateShareCard(session);
+  openSharePicker(session);
+}
+
+function openSharePicker(s) {
+  const existing = document.getElementById('modal-share-picker');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'modal-share-picker';
+  overlay.style.cssText = 'z-index:9999';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Choisir le format</div>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px">
+        Quelle version veux-tu partager ?
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
+        <button class="btn btn-glass btn-full" style="justify-content:flex-start;gap:12px;padding:14px 16px;border-radius:var(--r-lg)"
+          onclick="closeSharePicker();generateShareCard(window._shareTmpSession)">
+          <span style="font-size:22px">🏆</span>
+          <div style="text-align:left">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">Résumé podium</div>
+            <div style="font-size:12px;color:var(--text-2);font-weight:400">Vainqueur + classement · image épurée</div>
+          </div>
+        </button>
+        <button class="btn btn-glass btn-full" style="justify-content:flex-start;gap:12px;padding:14px 16px;border-radius:var(--r-lg)"
+          onclick="closeSharePicker();generateDetailShareCard(window._shareTmpSession)">
+          <span style="font-size:22px">📊</span>
+          <div style="text-align:left">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">Détail des scores</div>
+            <div style="font-size:12px;color:var(--text-2);font-weight:400">Tous les scores par catégorie</div>
+          </div>
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-glass btn-sm" onclick="closeSharePicker()">Annuler</button>
+      </div>
+    </div>`;
+  window._shareTmpSession = s;
+  document.body.appendChild(overlay);
+}
+
+function closeSharePicker() {
+  const o = document.getElementById('modal-share-picker');
+  if (o) o.remove();
 }
 
 function generateShareCard(s) {
@@ -5506,7 +5587,10 @@ function generateShareCard(s) {
         <!-- Footer -->
         <div style="display:flex;justify-content:space-between;align-items:center;
           padding-top:12px;border-top:1px solid rgba(255,255,255,.07)">
-          <span style="font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.1em;font-weight:700">CLUTCH · BY PLAY THAU'GETHER</span>
+          <div>
+            <div style="font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.1em;font-weight:700">CLUTCH · BY PLAY THAU'GETHER</div>
+            <div style="font-size:10px;color:rgba(100,210,255,.45);margin-top:2px;letter-spacing:.02em">playthaugether.github.io/Clutch</div>
+          </div>
           <span style="font-size:11px;color:rgba(255,255,255,.25)">${s.players?.length || 0} joueurs</span>
         </div>
 
@@ -5562,6 +5646,293 @@ function generateShareCard(s) {
     preloadImg.onerror = proceed; // même en cas d'erreur, on tente quand même la capture (fallback dégradé)
     preloadImg.src = banner;
     // Filet de sécurité : si l'image traîne (lent réseau), ne pas bloquer indéfiniment
+    setTimeout(proceed, 2500);
+  } else {
+    setTimeout(captureCard, 150);
+  }
+}
+
+// ============================================================
+//  SHARE CARD — VERSION DÉTAILLÉE (scores par catégorie)
+// ============================================================
+function generateDetailShareCard(s) {
+  const g = GAMES[s.gameId];
+  const banner = g?.img_banner || g?.img || '';
+  const date = s.savedAt
+    ? new Date(s.savedAt).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
+    : new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+  const results = s.results || [];
+  const winner = results[0];
+  const rankEmojis = ['🥇','🥈','🥉'];
+  const rankColors = ['#FFD60A','#C0C0C0','#CD7F32'];
+  const labels = SCORE_LABELS[s.gameId] || {};
+
+  // Générer les lignes de score par joueur (version compacte pour l'image)
+  function playerScoreRows(r) {
+    const pid = r.id;
+    const d = s.data?.scores?.[pid] || {};
+    const gid = s.gameId;
+    const rows = [];
+
+    if (gid === 'kingdomino') {
+      let domaines = [];
+      try { domaines = JSON.parse(d.domaines || '[]'); } catch(e) {}
+      domaines.forEach((dom, i) => {
+        const cases = parseInt(dom.cases) || 0;
+        const couronnes = parseInt(dom.couronnes) || 0;
+        if (!cases && !couronnes) return;
+        rows.push({ label: `Domaine ${i+1}`, pts: cases * couronnes });
+      });
+      const opts = s.data?.options || {};
+      if (opts.empire_milieu && d.chateau_centre === 'oui') rows.push({ label: 'Empire du milieu', pts: 10 });
+      if (opts.harmonie && d.grille_complete === 'oui') rows.push({ label: 'Harmonie', pts: 5 });
+      return rows;
+    }
+
+    // Skull King : manches
+    if (gid === 'skull_king') {
+      const manches = s.data?.manches || [];
+      manches.forEach((m, mi) => {
+        const pd = m.players?.[pid] || {};
+        const mise = parseInt(pd.mise); const plis = parseInt(pd.plis); const bonus = parseInt(pd.bonus) || 0;
+        if (isNaN(mise) || isNaN(plis)) return;
+        let pts = 0;
+        if (mise === 0) pts = plis === 0 ? (mi + 1) * 10 : -((mi + 1) * 10);
+        else pts = mise === plis ? mise * 20 + bonus : -(Math.abs(mise - plis) * 10);
+        rows.push({ label: `Manche ${mi + 1}`, pts });
+      });
+      return rows;
+    }
+
+    // Flip7 : manches
+    if (gid === 'flip7') {
+      const manches = s.data?.manches || [];
+      let cumul = 0;
+      manches.forEach((m, mi) => {
+        const pts = parseInt(m.scores?.[pid]) || 0;
+        const hasBonus = !!m.bonus?.[pid];
+        cumul += pts;
+        const label = `Manche ${mi + 1}${hasBonus ? ' ⚡Flip7' : ''}`;
+        rows.push({ label, pts });
+      });
+      return rows;
+    }
+
+    // Jeux génériques avec SCORE_LABELS
+    Object.entries(labels).forEach(([k, label]) => {
+      const raw = d[k];
+      if (raw === '' || raw === undefined || raw === null) return;
+      const qty = typeof raw === 'string' && (raw === 'oui' || raw === 'non') ? raw : parseInt(raw) || 0;
+      let pts = null;
+      if (gid === 'agricola') pts = agrScore(k, qty);
+      else if (gid === 'dewan') {
+        if (k==='feu') pts = null; // affiché via bonus
+        else if (k==='groupes') pts = qty * 4;
+        else if (k==='baies') pts = qty * 2;
+        else if (k==='terrain') pts = null;
+        else pts = qty;
+      }
+      else if (gid === 'maraudeurs') {
+        if (k==='ferme') pts = qty<=3?qty*1:qty<=5?qty*2:qty*3;
+        else if (k==='mur') pts = qty<=3?qty*2:qty<=5?qty*3:qty*4;
+        else if (k==='bastion') pts = qty<=3?qty*3:qty<=5?qty*4:qty*5;
+        else if (k==='terreur') { const T=[0,-1,-3,-6,-10,-15,-21]; pts = qty<=6?(T[qty]||0):T[6]-(qty-6)*6; }
+        else if (k==='faveur') pts = null;
+        else pts = qty;
+      }
+      else if (gid === 'seven_wonders') {
+        if (k==='tresor') pts = Math.floor(qty / 3);
+        else if (k==='roue' || k==='compas') pts = null;
+        else if (k==='tablette') {
+          const rr=parseInt(d.roue)||0, cc=parseInt(d.compas)||0, tt=parseInt(d.tablette)||0;
+          pts = (rr*rr)+(cc*cc)+(tt*tt)+(Math.min(rr,cc,tt)*7);
+        }
+        else pts = qty;
+      }
+      else if (gid === 'viva_catrina') {
+        if (k==='papillons') pts = qty*2;
+        else if (k==='chimeres5') pts = qty*5;
+        else if (k==='chimeres3') pts = qty*3;
+        else if (k==='echoppes') { const EP=[0,0,1,4,9,16,25]; pts = EP[Math.min(6,qty)]; }
+        else pts = qty;
+      }
+      else if (gid === 'pillards') {
+        if (k==='valkyrie') { const V=[0,1,2,4,6,9,12,15]; pts = V[Math.min(7,qty)]; }
+        else pts = qty;
+      }
+      else if (gid === 'citadelles') {
+        if (k==='cinq_couleurs') pts = raw==='oui'?3:0;
+        else if (k==='premier_8') pts = raw==='oui'?4:0;
+        else if (k==='autre_8') pts = raw==='oui'?2:0;
+        else pts = qty;
+      }
+      else if (gid === 'conspiracy') {
+        if (k==='coalition') pts = qty * 3;
+        else if (k==='maitre_perles') pts = raw==='oui'?5:0;
+        else if (k==='perles') pts = null;
+        else pts = qty;
+      }
+      else if (gid === 'iaww') {
+        if (k==='cartes_emp') pts = null;
+        else pts = qty;
+      }
+      else if (gid === 'faraway') {
+        if (k==='tiebreak') pts = null;
+        else pts = qty;
+      }
+      else if (gid === 'narak') {
+        if (k==='idoles') pts = qty*3;
+        else if (k==='gardiens') pts = qty*5;
+        else if (k==='peurs') pts = -qty;
+        else if (k==='tuiles_peur') pts = -(qty*2);
+        else pts = qty;
+      }
+      else pts = qty;
+
+      if (pts === null) return;
+      const valDisplay = typeof raw === 'string' && (raw === 'oui' || raw === 'non')
+        ? (raw === 'oui' ? '✓' : '✗')
+        : String(qty);
+      rows.push({ label, val: valDisplay, pts });
+    });
+    return rows;
+  }
+
+  const card = document.getElementById('share-card');
+  card.style.cssText = `position:fixed;top:-9999px;left:-9999px;z-index:-1;width:420px;border-radius:24px;overflow:hidden;font-family:'Inter',sans-serif;`;
+
+  card.innerHTML = `
+    <div style="width:420px;background:#0f1829;border-radius:24px;overflow:hidden;font-family:'Inter',sans-serif">
+
+      <!-- BANNIÈRE -->
+      <div style="height:130px;position:relative;overflow:hidden;background:#1a2a4a">
+        ${banner ? `
+          <div style="position:absolute;inset:0;background-image:url('${banner}');background-size:cover;background-position:center;filter:brightness(.55)"></div>
+          <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(15,24,41,.9) 100%)"></div>
+        ` : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a3a6b,#0d1f3c)"></div>`}
+        <div style="position:absolute;bottom:14px;left:20px;right:20px;display:flex;align-items:flex-end;justify-content:space-between">
+          <div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;letter-spacing:.08em;text-shadow:0 2px 12px rgba(0,0,0,.8)">${s.gameName}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:1px;letter-spacing:.08em;text-transform:uppercase">Détail des scores</div>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5)">${date}</div>
+        </div>
+      </div>
+
+      <!-- CONTENU -->
+      <div style="padding:16px 18px 14px">
+
+        <!-- Podium compact -->
+        ${winner ? `
+        <div style="display:flex;gap:6px;margin-bottom:16px;align-items:flex-end;justify-content:center">
+          ${results.slice(0,3).map((r,i) => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+              background:${i===0?'rgba(255,214,10,.1)':'rgba(255,255,255,.05)'};
+              border:1px solid ${i===0?'rgba(255,214,10,.3)':'rgba(255,255,255,.08)'};
+              border-radius:12px;padding:8px 4px">
+              <div style="font-size:${i===0?'18':'15'}px">${rankEmojis[i]||''}</div>
+              <div style="font-size:${i===0?'20':'16'}px;font-weight:900;color:${rankColors[i]||'var(--text)'}">${r.total}</div>
+              <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-align:center;word-break:break-word">${r.name}</div>
+            </div>`).join('')}
+        </div>` : ''}
+
+        <!-- Séparateur -->
+        <div style="height:1px;background:rgba(255,255,255,.07);margin-bottom:14px"></div>
+
+        <!-- Scores détaillés par joueur -->
+        ${results.map((r, ri) => {
+          const rows = playerScoreRows(r);
+          if (!rows.length) return `
+            <div style="margin-bottom:12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span style="font-size:14px">${rankEmojis[ri]||(ri+1)+'.'}</span>
+                <span style="font-size:13px;font-weight:700;color:#fff;flex:1">${r.name}</span>
+                <span style="font-size:14px;font-weight:800;color:${ri===0?'#FFD60A':'rgba(255,255,255,.7)'}">${r.total} pts</span>
+              </div>
+            </div>`;
+          return `
+            <div style="margin-bottom:14px">
+              <!-- En-tête joueur -->
+              <div style="display:flex;align-items:center;gap:8px;
+                background:${ri===0?'rgba(255,214,10,.08)':'rgba(255,255,255,.04)'};
+                border:1px solid ${ri===0?'rgba(255,214,10,.2)':'rgba(255,255,255,.07)'};
+                border-radius:10px;padding:8px 12px;margin-bottom:4px">
+                <span style="font-size:14px">${rankEmojis[ri]||(ri+1)+'.'}</span>
+                <span style="font-size:13px;font-weight:700;color:#fff;flex:1">${r.name}</span>
+                <span style="font-size:15px;font-weight:900;color:${ri===0?'#FFD60A':'rgba(255,255,255,.8)'}">${r.total} pts</span>
+              </div>
+              <!-- Lignes de score -->
+              <div style="padding:4px 4px 0">
+                ${rows.map(row => `
+                  <div style="display:flex;align-items:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03)">
+                    <span style="flex:1;font-size:10px;color:rgba(255,255,255,.45)">${row.label}</span>
+                    ${row.val !== undefined ? `<span style="font-size:10px;color:rgba(255,255,255,.6);margin-right:6px">${row.val}</span>` : ''}
+                    <span style="font-size:10px;font-weight:700;color:${row.pts<0?'#FF453A':row.pts>0?'#30D158':'rgba(255,255,255,.3)'};min-width:36px;text-align:right">
+                      ${row.pts>=0?'+':''}${row.pts}
+                    </span>
+                  </div>`).join('')}
+              </div>
+            </div>`;
+        }).join('')}
+
+        <!-- Footer -->
+        <div style="display:flex;justify-content:space-between;align-items:center;
+          padding-top:10px;border-top:1px solid rgba(255,255,255,.07);margin-top:4px">
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,.22);letter-spacing:.1em;font-weight:700">CLUTCH · BY PLAY THAU'GETHER</div>
+            <div style="font-size:9px;color:rgba(100,210,255,.4);margin-top:1px">playthaugether.github.io/Clutch</div>
+          </div>
+          <span style="font-size:10px;color:rgba(255,255,255,.22)">${s.players?.length || 0} joueurs</span>
+        </div>
+
+      </div>
+    </div>`;
+
+  toast('Génération en cours...');
+
+  const captureCard = () => {
+    html2canvas(card.firstElementChild, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `Clutch-${s.gameName}-detail-${date.replace(/ /g,'-')}.png`;
+      link.href = canvas.toDataURL('image/png');
+
+      if (navigator.share && navigator.canShare) {
+        canvas.toBlob(blob => {
+          const file = new File([blob], link.download, { type:'image/png' });
+          if (navigator.canShare({ files:[file] })) {
+            navigator.share({
+              title: `${s.gameName} — Clutch`,
+              text: `${winner?.name} gagne avec ${winner?.total} pts !`,
+              files: [file]
+            }).catch(() => { link.click(); });
+          } else {
+            link.click();
+          }
+        });
+      } else {
+        link.click();
+        toast('Image téléchargée !');
+      }
+    }).catch(err => {
+      console.error(err);
+      toast('Erreur lors de la génération');
+    });
+  };
+
+  if (banner) {
+    const preloadImg = new Image();
+    preloadImg.crossOrigin = 'anonymous';
+    let done = false;
+    const proceed = () => { if (!done) { done = true; setTimeout(captureCard, 80); } };
+    preloadImg.onload = proceed;
+    preloadImg.onerror = proceed;
+    preloadImg.src = banner;
     setTimeout(proceed, 2500);
   } else {
     setTimeout(captureCard, 150);
