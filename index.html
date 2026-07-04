@@ -1482,7 +1482,7 @@ function renderFlip7Manche() {
           <div class="pca-controls">
             <button class="btn-circle" onclick="f7Minus('${p.id}')">−</button>
             <input type="text" inputmode="numeric" class="score-input" id="f7inp-${p.id}"
-              value="${val || ''}" onchange="f7InputChange('${p.id}', this.value)">
+              value="${val || ''}" oninput="f7InputSilent('${p.id}', this.value)" onblur="renderFlip7Manche()">
             <button class="btn-circle" onclick="f7Plus('${p.id}')">+</button>
             <button class="btn-flip-bonus ${m.bonus[p.id] ? 'active' : ''}"
               onclick="toggleFlip7Bonus('${p.id}')" title="+15 pts Flip 7">Flip 7</button>
@@ -1515,20 +1515,16 @@ function f7Minus(pid) {
   if (inp) inp.value = m.scores[pid];
   renderFlip7Manche();
 }
-function f7InputChange(pid, val) {
+function f7InputSilent(pid, val) {
   const m = session.data.manches[mancheIdx];
-  const v = parseInt(val) || 0;
-  m.scores[pid] = Math.max(0, v);
-  // recalcul totaux silencieux (pas de re-render complet pour garder le focus)
+  m.scores[pid] = Math.max(0, parseInt(val) || 0);
   const { players, data } = session;
   data.totals = Object.fromEntries(players.map(p => [p.id, 0]));
   data.manches.forEach(mn => { players.forEach(p => { data.totals[p.id] += (mn.scores[p.id] || 0); }); });
-  // update juste les cumuls et totaux pills
-  players.forEach(p => {
-    const cuEl = document.querySelector(`.player-name + .player-cumul`);
-    // update all cumuls
-  });
-  // Simple: just re-render
+}
+
+function f7InputChange(pid, val) {
+  f7InputSilent(pid, val);
   renderFlip7Manche();
 }
 
@@ -1627,17 +1623,17 @@ function renderSkullKingManche() {
             <div class="sk-pca-field-wrap">
               <div class="sk-pca-label">Mise</div>
               <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.mise}"
-                placeholder="—" onchange="updateSK(${mancheIdx},'${p.id}','mise',this.value)">
+                placeholder="—" oninput="updateSKSilent(${mancheIdx},'${p.id}','mise',this.value)" onblur="renderSkullKingManche()">
             </div>
             <div class="sk-pca-field-wrap">
               <div class="sk-pca-label">Plis</div>
               <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.plis}"
-                placeholder="—" onchange="updateSK(${mancheIdx},'${p.id}','plis',this.value)">
+                placeholder="—" oninput="updateSKSilent(${mancheIdx},'${p.id}','plis',this.value)" onblur="renderSkullKingManche()">
             </div>
             <div class="sk-pca-field-wrap">
               <div class="sk-pca-label">Bonus</div>
-              <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.bonus}"
-                placeholder="0" onchange="updateSK(${mancheIdx},'${p.id}','bonus',this.value)">
+              <input type="text" inputmode="text" pattern="-?[0-9]*" class="sk-pca-input" value="${d.bonus}"
+                placeholder="0" oninput="updateSKSilent(${mancheIdx},'${p.id}','bonus',this.value)" onblur="renderSkullKingManche()">
             </div>
           </div>
         </div>`;
@@ -1653,8 +1649,16 @@ function renderSkullKingManche() {
     </div>`;
 }
 
+function updateSKSilent(mi, pid, field, val) {
+  if (field === 'bonus') {
+    session.data.manches[mi].players[pid][field] = val === '' ? '' : (parseInt(val) || 0);
+  } else {
+    session.data.manches[mi].players[pid][field] = val === '' ? '' : Math.max(0, parseInt(val) || 0);
+  }
+}
+
 function updateSK(mi, pid, field, val) {
-  session.data.manches[mi].players[pid][field] = val === '' ? '' : Math.max(0, parseInt(val) || 0);
+  updateSKSilent(mi, pid, field, val);
   renderSkullKingManche();
 }
 
@@ -1712,7 +1716,7 @@ function renderAgricolaManche() {
                       style="width:100%"
                       value="${qty || ''}"
                       placeholder="—"
-                      onchange="updateAgricola('${p.id}','${item.id}',this.value)">
+                      oninput="updateAgricola('${p.id}','${item.id}',this.value)">
                     <div style="font-size:11px;font-weight:700;color:${ptsCol}" class="score-pts-label" id="agr-pts-${p.id}-${item.id}">
                       ${pts > 0 ? '+' : ''}${pts} pt${Math.abs(pts) > 1 ? 's' : ''}
                     </div>
@@ -5508,9 +5512,89 @@ function closeSharePicker() {
   if (o) o.remove();
 }
 
+// ── Utilitaire : charge une URL image → data:URL via canvas (contourne le CORS pour html2canvas) ──
+function loadImageAsDataURL(url) {
+  return new Promise((resolve) => {
+    if (!url) { resolve(null); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext('2d').drawImage(img, 0, 0);
+        resolve(c.toDataURL('image/jpeg', 0.92));
+      } catch(e) { resolve(url); } // fallback : URL originale
+    };
+    img.onerror = () => resolve(url);
+    img.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+    setTimeout(() => resolve(url), 4000); // timeout 4s
+  });
+}
+
+// ── Modal partage/enregistrement ──────────────────────────────────────────────
+function openShareSaveModal(canvas, filename, gameName, winnerText) {
+  const existing = document.getElementById('modal-share-save');
+  if (existing) existing.remove();
+  const dataUrl = canvas.toDataURL('image/png');
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'modal-share-save';
+  overlay.style.cssText = 'z-index:10000';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Image générée !</div>
+      <img src="${dataUrl}" style="width:100%;border-radius:12px;margin-bottom:16px;box-shadow:0 4px 24px rgba(0,0,0,.4)">
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
+        <button class="btn btn-primary btn-full" onclick="doShareImage(this)">
+          📤 Partager
+        </button>
+        <button class="btn btn-glass btn-full" onclick="doSaveImage()">
+          💾 Enregistrer dans la galerie
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-glass btn-sm" onclick="closeShareSaveModal()">Fermer</button>
+      </div>
+    </div>`;
+  // Stocker les données pour les handlers
+  window._shareCardData = { canvas, filename, gameName, winnerText };
+  document.body.appendChild(overlay);
+}
+
+function closeShareSaveModal() {
+  const o = document.getElementById('modal-share-save');
+  if (o) o.remove();
+}
+
+function doShareImage() {
+  const { canvas, filename, gameName, winnerText } = window._shareCardData || {};
+  if (!canvas) return;
+  canvas.toBlob(blob => {
+    const file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ title: gameName + ' — Clutch', text: winnerText, files: [file] })
+        .catch(() => doSaveImage());
+    } else {
+      doSaveImage();
+    }
+  });
+}
+
+function doSaveImage() {
+  const { canvas, filename } = window._shareCardData || {};
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  toast('Image enregistrée !');
+}
+
 function generateShareCard(s) {
   const g = GAMES[s.gameId];
-  const banner = g?.img_banner || g?.img || '';
+  const bannerUrl = g?.img_banner || g?.img || '';
   const date = s.savedAt
     ? new Date(s.savedAt).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
     : new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
@@ -5519,137 +5603,61 @@ function generateShareCard(s) {
   const others = results.slice(1);
   const rankEmojis = ['🥇','🥈','🥉'];
 
-  // Construire le HTML de la carte
-  const card = document.getElementById('share-card');
-  card.style.cssText = `
-    position:fixed;top:-9999px;left:-9999px;z-index:-1;
-    width:400px;border-radius:24px;overflow:hidden;
-    font-family:'Inter',sans-serif;
-  `;
-
-  card.innerHTML = `
-    <div style="width:400px;background:#0f1829;border-radius:24px;overflow:hidden;font-family:'Inter',sans-serif">
-
-      <!-- BANNIÈRE EN HAUT -->
-      <div style="height:150px;position:relative;overflow:hidden;background:#1a2a4a">
-        ${banner ? `
-          <div id="share-banner-bg" style="position:absolute;inset:0;
-            background-image:url('${banner}');
-            background-size:cover;background-position:center;
-            filter:brightness(.65)"></div>
-          <div style="position:absolute;inset:0;
-            background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(15,24,41,.9) 100%)"></div>
-        ` : `
-          <div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a3a6b,#0d1f3c)"></div>
-        `}
-        <!-- Nom du jeu sur la bannière -->
-        <div style="position:absolute;bottom:14px;left:20px;right:20px;display:flex;align-items:flex-end;justify-content:space-between">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;letter-spacing:.08em;
-            text-shadow:0 2px 12px rgba(0,0,0,.8)">${s.gameName}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.5)">${date}</div>
-        </div>
-      </div>
-
-      <!-- CONTENU -->
-      <div style="padding:20px 20px 16px">
-
-        <!-- Gagnant -->
-        ${winner ? `
-        <div style="margin-bottom:20px">
-          <div style="font-size:11px;color:#FFD60A;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">
-            🏆 Vainqueur
-          </div>
-          <div style="font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em">
-            ${winner.name}
-          </div>
-          <div style="font-size:24px;font-weight:800;color:#FFD60A;margin-top:6px">
-            ${winner.total} pts
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- Séparateur -->
-        <div style="height:1px;background:rgba(255,255,255,.08);margin-bottom:14px"></div>
-
-        <!-- Autres joueurs -->
-        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:18px">
-          ${others.map((r, i) => `
-            <div style="display:flex;align-items:center;gap:10px;
-              background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
-              border-radius:12px;padding:9px 13px">
-              <span style="font-size:16px;min-width:22px">${rankEmojis[i+1] || (i+2)+'.'}</span>
-              <span style="flex:1;font-size:14px;font-weight:600;color:rgba(255,255,255,.8)">${r.name}</span>
-              <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,.45)">${r.total} pts</span>
-            </div>
-          `).join('')}
-        </div>
-
-        <!-- Footer -->
-        <div style="display:flex;justify-content:space-between;align-items:center;
-          padding-top:12px;border-top:1px solid rgba(255,255,255,.07)">
-          <div>
-            <div style="font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.1em;font-weight:700">CLUTCH · BY PLAY THAU'GETHER</div>
-            <div style="font-size:10px;color:rgba(100,210,255,.45);margin-top:2px;letter-spacing:.02em">playthaugether.github.io/Clutch</div>
-          </div>
-          <span style="font-size:11px;color:rgba(255,255,255,.25)">${s.players?.length || 0} joueurs</span>
-        </div>
-
-      </div>
-    </div>`;
-
   toast('Génération en cours...');
 
-  // Attendre que l'image de bannière soit RÉELLEMENT chargée avant de capturer
-  // (sinon html2canvas peut capturer avant que l'image de fond ne soit prête)
-  const captureCard = () => {
-    html2canvas(card.firstElementChild, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-    }).then(canvas => {
-      const link = document.createElement('a');
-      link.download = `Clutch-${s.gameName}-${date.replace(/ /g,'-')}.png`;
-      link.href = canvas.toDataURL('image/png');
+  // Charger la bannière en data:URL d'abord pour éviter tout problème CORS avec html2canvas
+  loadImageAsDataURL(bannerUrl).then(bannerData => {
+    const card = document.getElementById('share-card');
+    card.style.cssText = 'position:fixed;top:-9999px;left:-9999px;z-index:-1;width:400px;border-radius:24px;overflow:hidden;font-family:Inter,sans-serif;';
 
-      if (navigator.share && navigator.canShare) {
-        canvas.toBlob(blob => {
-          const file = new File([blob], link.download, { type:'image/png' });
-          if (navigator.canShare({ files:[file] })) {
-            navigator.share({
-              title: `${s.gameName} — Clutch`,
-              text: `${winner?.name} gagne avec ${winner?.total} pts !`,
-              files: [file]
-            }).catch(() => { link.click(); });
-          } else {
-            link.click();
-          }
-        });
-      } else {
-        link.click();
-        toast('Image téléchargée !');
-      }
-    }).catch(err => {
-      console.error(err);
-      toast('Erreur lors de la génération');
-    });
-  };
+    card.innerHTML = `
+      <div style="width:400px;background:#0f1829;border-radius:24px;overflow:hidden;font-family:Inter,sans-serif">
+        <div style="height:150px;position:relative;overflow:hidden;background:#1a2a4a">
+          ${bannerData ? `
+            <img src="${bannerData}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.65)">
+            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(15,24,41,.9) 100%)"></div>
+          ` : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a3a6b,#0d1f3c)"></div>`}
+          <div style="position:absolute;bottom:14px;left:20px;right:20px;display:flex;align-items:flex-end;justify-content:space-between">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;letter-spacing:.08em;text-shadow:0 2px 12px rgba(0,0,0,.8)">${s.gameName}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.5)">${date}</div>
+          </div>
+        </div>
+        <div style="padding:20px 20px 16px">
+          ${winner ? `
+          <div style="margin-bottom:20px">
+            <div style="font-size:11px;color:#FFD60A;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">🏆 Vainqueur</div>
+            <div style="font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em">${winner.name}</div>
+            <div style="font-size:24px;font-weight:800;color:#FFD60A;margin-top:6px">${winner.total} pts</div>
+          </div>` : ''}
+          <div style="height:1px;background:rgba(255,255,255,.08);margin-bottom:14px"></div>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:18px">
+            ${others.map((r, i) => `
+              <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:9px 13px">
+                <span style="font-size:16px;min-width:22px">${rankEmojis[i+1] || (i+2)+'.'}</span>
+                <span style="flex:1;font-size:14px;font-weight:600;color:rgba(255,255,255,.8)">${r.name}</span>
+                <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,.45)">${r.total} pts</span>
+              </div>`).join('')}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)">
+            <div>
+              <div style="font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.1em;font-weight:700">CLUTCH · BY PLAY THAU'GETHER</div>
+              <div style="font-size:10px;color:rgba(100,210,255,.45);margin-top:2px;letter-spacing:.02em">playthaugether.github.io/Clutch</div>
+            </div>
+            <span style="font-size:11px;color:rgba(255,255,255,.25)">${s.players?.length || 0} joueurs</span>
+          </div>
+        </div>
+      </div>`;
 
-  if (banner) {
-    // Précharger l'image réelle pour garantir qu'elle est disponible avant la capture
-    const preloadImg = new Image();
-    preloadImg.crossOrigin = 'anonymous';
-    let done = false;
-    const proceed = () => { if (!done) { done = true; setTimeout(captureCard, 80); } };
-    preloadImg.onload = proceed;
-    preloadImg.onerror = proceed; // même en cas d'erreur, on tente quand même la capture (fallback dégradé)
-    preloadImg.src = banner;
-    // Filet de sécurité : si l'image traîne (lent réseau), ne pas bloquer indéfiniment
-    setTimeout(proceed, 2500);
-  } else {
-    setTimeout(captureCard, 150);
-  }
+    setTimeout(() => {
+      html2canvas(card.firstElementChild, {
+        backgroundColor: null, scale: 2, useCORS: true, allowTaint: true, logging: false,
+      }).then(canvas => {
+        const filename = 'Clutch-' + s.gameName + '-' + date.replace(/ /g, '-') + '.png';
+        const winnerText = winner ? winner.name + ' gagne avec ' + winner.total + ' pts !' : '';
+        openShareSaveModal(canvas, filename, s.gameName, winnerText);
+      }).catch(err => { console.error(err); toast('Erreur lors de la génération'); });
+    }, 120);
+  });
 }
 
 // ============================================================
@@ -5798,16 +5806,17 @@ function generateDetailShareCard(s) {
     return rows;
   }
 
+  loadImageAsDataURL(banner).then(bannerData => {
   const card = document.getElementById('share-card');
-  card.style.cssText = `position:fixed;top:-9999px;left:-9999px;z-index:-1;width:420px;border-radius:24px;overflow:hidden;font-family:'Inter',sans-serif;`;
+  card.style.cssText = 'position:fixed;top:-9999px;left:-9999px;z-index:-1;width:420px;border-radius:24px;overflow:hidden;font-family:Inter,sans-serif;';
 
   card.innerHTML = `
     <div style="width:420px;background:#0f1829;border-radius:24px;overflow:hidden;font-family:'Inter',sans-serif">
 
       <!-- BANNIÈRE -->
       <div style="height:130px;position:relative;overflow:hidden;background:#1a2a4a">
-        ${banner ? `
-          <div style="position:absolute;inset:0;background-image:url('${banner}');background-size:cover;background-position:center;filter:brightness(.55)"></div>
+        ${bannerData ? `
+          <img src="${bannerData}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.55)">
           <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1) 0%,rgba(15,24,41,.9) 100%)"></div>
         ` : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a3a6b,#0d1f3c)"></div>`}
         <div style="position:absolute;bottom:14px;left:20px;right:20px;display:flex;align-items:flex-end;justify-content:space-between">
@@ -5888,55 +5897,16 @@ function generateDetailShareCard(s) {
       </div>
     </div>`;
 
-  toast('Génération en cours...');
-
-  const captureCard = () => {
+  setTimeout(() => {
     html2canvas(card.firstElementChild, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
+      backgroundColor: null, scale: 2, useCORS: true, allowTaint: true, logging: false,
     }).then(canvas => {
-      const link = document.createElement('a');
-      link.download = `Clutch-${s.gameName}-detail-${date.replace(/ /g,'-')}.png`;
-      link.href = canvas.toDataURL('image/png');
-
-      if (navigator.share && navigator.canShare) {
-        canvas.toBlob(blob => {
-          const file = new File([blob], link.download, { type:'image/png' });
-          if (navigator.canShare({ files:[file] })) {
-            navigator.share({
-              title: `${s.gameName} — Clutch`,
-              text: `${winner?.name} gagne avec ${winner?.total} pts !`,
-              files: [file]
-            }).catch(() => { link.click(); });
-          } else {
-            link.click();
-          }
-        });
-      } else {
-        link.click();
-        toast('Image téléchargée !');
-      }
-    }).catch(err => {
-      console.error(err);
-      toast('Erreur lors de la génération');
-    });
-  };
-
-  if (banner) {
-    const preloadImg = new Image();
-    preloadImg.crossOrigin = 'anonymous';
-    let done = false;
-    const proceed = () => { if (!done) { done = true; setTimeout(captureCard, 80); } };
-    preloadImg.onload = proceed;
-    preloadImg.onerror = proceed;
-    preloadImg.src = banner;
-    setTimeout(proceed, 2500);
-  } else {
-    setTimeout(captureCard, 150);
-  }
+      const filename = 'Clutch-' + s.gameName + '-detail-' + date.replace(/ /g, '-') + '.png';
+      const winnerText = winner ? winner.name + ' gagne avec ' + winner.total + ' pts !' : '';
+      openShareSaveModal(canvas, filename, s.gameName, winnerText);
+    }).catch(err => { console.error(err); toast('Erreur lors de la génération'); });
+  }, 120);
+  }); // end loadImageAsDataURL
 }
 
 // ============================================================
