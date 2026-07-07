@@ -1141,11 +1141,28 @@ const GAMES_DEF = {
     img:'', img_banner:'' },
   conspiracy:    { id:'conspiracy',   reveal:true, rules:'http://jeuxstrategie1.free.fr/jeu_conspiracy/regle.pdf',      name:'Conspiracy',                emoji:'', desc:'Décompte final · 4 catégories', maxPlayers: 4,
     img:'', img_banner:'' },
+  azul:          { id:'azul',         reveal:false, rules:'https://www.jeuxdusoleil.fr/medias/wysiwyg/pdf/Azul_regle_du_jeu.pdf', name:'Azul',                      emoji:'', desc:'Manches + bonus fin de partie', maxPlayers: 4,
+    img:'', img_banner:'' },
+  small_world:   { id:'small_world',  reveal:false, rules:'https://www.jeuxavolonte.asso.fr/regles/small_world.pdf',             name:'Small World',               emoji:'', desc:'Jetons par tour · suspense', maxPlayers: 5,
+    img:'', img_banner:'' },
+  splendor:      { id:'splendor',     reveal:true,  rules:'https://ludovox-fr.exactdn.com/wp-content/uploads/ressources/RExSplendorFR.pdf', name:'Splendor',         emoji:'', desc:'Cartes + Nobles · 15 pts', maxPlayers: 4,
+    img:'', img_banner:'' },
 };
 // Tri alphabétique
 const GAMES = Object.fromEntries(
   Object.entries(GAMES_DEF).sort((a,b) => a[1].name.localeCompare(b[1].name, 'fr'))
 );
+
+// ============================================================
+//  UTILITAIRE : re-render conditionnel (évite le double-tap)
+// ============================================================
+// Appelle renderFn seulement si le focus ne va PAS vers un autre <input>/<select>/<textarea>
+// Usage : onblur="safeRerender(event, renderMaFonction)"
+function safeRerender(event, renderFn) {
+  const next = event.relatedTarget;
+  if (next && (next.tagName === 'INPUT' || next.tagName === 'SELECT' || next.tagName === 'TEXTAREA')) return;
+  renderFn();
+}
 
 // ============================================================
 //  7 WONDERS — calcul science
@@ -1411,6 +1428,9 @@ function startGame() {
   if (g.id === 'viva_catrina')  initVivaCatrina();
   if (g.id === 'iaww')          initIAWW();
   if (g.id === 'pillards')      initPillards();
+  if (g.id === 'azul')          initAzul();
+  if (g.id === 'small_world')   initSmallWorld();
+  if (g.id === 'splendor')      initSplendor();
   showView('game');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   renderCurrentManche();
@@ -1482,7 +1502,7 @@ function renderFlip7Manche() {
           <div class="pca-controls">
             <button class="btn-circle" onclick="f7Minus('${p.id}')">−</button>
             <input type="text" inputmode="numeric" class="score-input" id="f7inp-${p.id}"
-              value="${val || ''}" oninput="f7InputSilent('${p.id}', this.value)" onblur="renderFlip7Manche()">
+              value="${val || ''}" oninput="f7InputSilent('${p.id}', this.value)" onblur="safeRerender(event, renderFlip7Manche)">
             <button class="btn-circle" onclick="f7Plus('${p.id}')">+</button>
             <button class="btn-flip-bonus ${m.bonus[p.id] ? 'active' : ''}"
               onclick="toggleFlip7Bonus('${p.id}')" title="+15 pts Flip 7">Flip 7</button>
@@ -1623,17 +1643,17 @@ function renderSkullKingManche() {
             <div class="sk-pca-field-wrap">
               <div class="sk-pca-label">Mise</div>
               <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.mise}"
-                placeholder="—" oninput="updateSKSilent(${mancheIdx},'${p.id}','mise',this.value)" onblur="renderSkullKingManche()">
+                placeholder="—" oninput="updateSKSilent(${mancheIdx},'${p.id}','mise',this.value)" onblur="safeRerender(event, renderSkullKingManche)">
             </div>
             <div class="sk-pca-field-wrap">
               <div class="sk-pca-label">Plis</div>
               <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.plis}"
-                placeholder="—" oninput="updateSKSilent(${mancheIdx},'${p.id}','plis',this.value)" onblur="renderSkullKingManche()">
+                placeholder="—" oninput="updateSKSilent(${mancheIdx},'${p.id}','plis',this.value)" onblur="safeRerender(event, renderSkullKingManche)">
             </div>
             <div class="sk-pca-field-wrap">
               <div class="sk-pca-label">Bonus</div>
               <input type="text" inputmode="text" pattern="-?[0-9]*" class="sk-pca-input" value="${d.bonus}"
-                placeholder="0" oninput="updateSKSilent(${mancheIdx},'${p.id}','bonus',this.value)" onblur="renderSkullKingManche()">
+                placeholder="0" oninput="updateSKSilent(${mancheIdx},'${p.id}','bonus',this.value)" onblur="safeRerender(event, renderSkullKingManche)">
             </div>
           </div>
         </div>`;
@@ -3721,6 +3741,9 @@ function renderCurrentManche() {
   if (session.gameId === 'viva_catrina')  renderVivaCatrinaManche();
   if (session.gameId === 'iaww')          renderIAWWManche();
   if (session.gameId === 'pillards')      renderPillardsManche();
+  if (session.gameId === 'azul')          renderAzulManche();
+  if (session.gameId === 'small_world')   renderSmallWorldManche();
+  if (session.gameId === 'splendor')      renderSplendorScores();
 }
 
 // ============================================================
@@ -3764,6 +3787,33 @@ function openManchesModal() {
       <strong style="color:var(--text)">Totaux</strong><br>
       ${players.map(p => { const col = tots[p.id] > 0 ? 'var(--green)' : tots[p.id] < 0 ? 'var(--red)' : 'var(--text-2)'; return `${p.name} : <strong style="color:${col}">${tots[p.id] > 0 ? '+' : ''}${tots[p.id]}</strong>`; }).join(' · ')}
     </div>`;
+  }
+
+  if (gameId === 'azul') {
+    const tots = Object.fromEntries(players.map(p => [p.id, 0]));
+    data.manches.forEach((m, mi) => {
+      players.forEach(p => { tots[p.id] += (m.scores[p.id] || 0); });
+      html += `<div class="manche-summary" onclick="goToManche(${mi});closeModal('modal-manches')">
+        <div class="manche-summary-num">Manche ${mi + 1}</div>
+        <div class="manche-summary-scores">${players.map(p => `${p.name}: ${m.scores[p.id] || 0} pts`).join(' · ')}</div>
+        <span style="color:var(--text-3)">›</span>
+      </div>`;
+    });
+    html += `<div style="padding:12px 0;color:var(--text-2);font-size:13px;border-top:1px solid rgba(255,255,255,.08);margin-top:8px">
+      <strong style="color:var(--text)">Totaux manches</strong><br>
+      ${players.map(p => `${p.name} : <strong style="color:var(--accent)">${tots[p.id]} pts</strong>`).join(' · ')}
+    </div>`;
+  }
+
+  if (gameId === 'small_world') {
+    const tots = Object.fromEntries(players.map(p => [p.id, 0]));
+    data.manches.forEach((m, mi) => {
+      players.forEach(p => { tots[p.id] += (m.scores[p.id] || 0); });
+      html += `<div class="manche-summary">
+        <div class="manche-summary-num">Tour ${mi + 1}</div>
+        <div class="manche-summary-scores">${players.map(p => `${p.name}: ✓`).join(' · ')}</div>
+      </div>`;
+    });
   }
 
   document.getElementById('modal-manches-content').innerHTML = `<div class="manches-panel">${html}</div>`;
@@ -4027,9 +4077,355 @@ function finishGame(gameId) {
     }).sort((a, b) => b.total - a.total);
   }
 
+  // ── AZUL ──────────────────────────────────────────────────
+  if (gameId === 'azul') {
+    data.totals = Object.fromEntries(players.map(p => [p.id, 0]));
+    data.manches.forEach(m => { players.forEach(p => { data.totals[p.id] += (m.scores[p.id] || 0); }); });
+    results = players.map(p => {
+      const sc = data.scores[p.id] || {};
+      const lignes   = parseInt(sc.lignes)        || 0;
+      const colonnes = parseInt(sc.colonnes)      || 0;
+      const cinq     = parseInt(sc.cinq_couleurs) || 0;
+      const bonus = (lignes * 2) + (colonnes * 7) + (cinq * 10);
+      const total = (data.totals[p.id] || 0) + bonus;
+      return { ...p, total };
+    }).sort((a, b) => b.total - a.total);
+  }
+
+  // ── SMALL WORLD ───────────────────────────────────────────
+  if (gameId === 'small_world') {
+    data.totals = Object.fromEntries(players.map(p => [p.id, 0]));
+    data.manches.forEach(m => { players.forEach(p => { data.totals[p.id] += (m.scores[p.id] || 0); }); });
+    results = players.map(p => ({ ...p, total: data.totals[p.id] || 0 }))
+      .sort((a, b) => b.total - a.total);
+  }
+
+  // ── SPLENDOR ──────────────────────────────────────────────
+  if (gameId === 'splendor') {
+    results = players.map(p => {
+      const d = data.scores[p.id] || {};
+      const pv_cartes = parseInt(d.pv_cartes)  || 0;
+      const nobles    = parseInt(d.nobles)     || 0;
+      const nb_cartes = parseInt(d.nb_cartes)  || 0;
+      const total = pv_cartes + (nobles * 3);
+      return { ...p, total, _nb_cartes: nb_cartes };
+    }).sort((a, b) =>
+      b.total - a.total ||
+      a._nb_cartes - b._nb_cartes   // moins de cartes = gagne en cas d'égalité
+    );
+  }
+
   session.results = results;
   session.finished = true;
   showResults(results);
+}
+
+
+// ============================================================
+//  AZUL
+// ============================================================
+function initAzul() {
+  session.data = {
+    manches: [],
+    totals: Object.fromEntries(session.players.map(p => [p.id, 0])),
+    scores: Object.fromEntries(session.players.map(p => [p.id, { lignes:'', colonnes:'', cinq_couleurs:'' }]))
+  };
+  pushNewAzulManche();
+}
+
+function pushNewAzulManche() {
+  session.data.manches.push({
+    scores: Object.fromEntries(session.players.map(p => [p.id, 0]))
+  });
+}
+
+function renderAzulManche() {
+  const { players, data } = session;
+  const m = data.manches[mancheIdx];
+  const totalManches = data.manches.length;
+
+  data.totals = Object.fromEntries(players.map(p => [p.id, 0]));
+  data.manches.forEach(mn => { players.forEach(p => { data.totals[p.id] += (mn.scores[p.id] || 0); }); });
+
+  const el = document.getElementById('view-game');
+  el.innerHTML = `
+    <div class="manche-screen">
+      ${gameHeroHTML('azul',
+        'Manche ' + (mancheIdx + 1) + ' / ' + totalManches + ' · ' + players.length + ' joueurs',
+        '<span class="game-hero-all" onclick="openManchesModal()">Voir tout</span>' +
+        (mancheIdx > 0 ? '<button class="btn btn-glass btn-sm" onclick="mancheIdx--;renderAzulManche()">← Préc.</button>' : '')
+      )}
+      <div class="pca-list">
+        ${players.map(p => {
+          const val = m.scores[p.id] || '';
+          return `
+            <div class="pca-card">
+              <div class="pca-header">
+                <span class="player-name">${p.name}</span>
+              </div>
+              <div class="pca-controls" style="justify-content:center">
+                <button class="btn-circle" onclick="azulMinus('${p.id}')">−</button>
+                <input type="text" inputmode="numeric" class="score-input" id="azulinp-${p.id}"
+                  value="${val}"
+                  oninput="azulInputSilent('${p.id}', this.value)"
+                  onblur="safeRerender(event, renderAzulManche)">
+                <button class="btn-circle" onclick="azulPlus('${p.id}')">+</button>
+              </div>
+              <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:4px">pts cette manche (pénalités déduites)</div>
+            </div>`;
+        }).join('')}
+      </div>
+      <div class="manche-actions">
+        <button class="btn btn-glass btn-full" style="margin-bottom:8px" onclick="addAzulManche()">
+          + Manche suivante
+        </button>
+
+        <!-- Bonus fin de partie (toujours visibles) -->
+        <div class="pca-list" style="margin-bottom:8px">
+          ${players.map(p => {
+            const sc = data.scores[p.id] || {};
+            return `
+              <div class="pca-card" style="padding:12px 14px">
+                <div class="pca-header" style="margin-bottom:10px">
+                  <span class="player-name" style="font-size:13px">${p.name} · Bonus fin de partie</span>
+                </div>
+                <div class="sk-pca-fields">
+                  <div class="sk-pca-field-wrap">
+                    <div class="sk-pca-label">Lignes complètes</div>
+                    <input type="text" inputmode="numeric" class="sk-pca-input" value="${sc.lignes || ''}"
+                      placeholder="0"
+                      oninput="azulBonusSilent('${p.id}','lignes',this.value)"
+                      onblur="safeRerender(event, renderAzulManche)">
+                  </div>
+                  <div class="sk-pca-field-wrap">
+                    <div class="sk-pca-label">Colonnes complètes</div>
+                    <input type="text" inputmode="numeric" class="sk-pca-input" value="${sc.colonnes || ''}"
+                      placeholder="0"
+                      oninput="azulBonusSilent('${p.id}','colonnes',this.value)"
+                      onblur="safeRerender(event, renderAzulManche)">
+                  </div>
+                  <div class="sk-pca-field-wrap">
+                    <div class="sk-pca-label">5 même couleur</div>
+                    <input type="text" inputmode="numeric" class="sk-pca-input" value="${sc.cinq_couleurs || ''}"
+                      placeholder="0"
+                      oninput="azulBonusSilent('${p.id}','cinq_couleurs',this.value)"
+                      onblur="safeRerender(event, renderAzulManche)">
+                  </div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="finishGame('azul')">Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
+function azulInputSilent(pid, val) {
+  const m = session.data.manches[mancheIdx];
+  m.scores[pid] = parseInt(val) || 0;
+  const { players, data } = session;
+  data.totals = Object.fromEntries(players.map(p => [p.id, 0]));
+  data.manches.forEach(mn => { players.forEach(p => { data.totals[p.id] += (mn.scores[p.id] || 0); }); });
+}
+
+function azulBonusSilent(pid, field, val) {
+  if (!session.data.scores[pid]) session.data.scores[pid] = {};
+  session.data.scores[pid][field] = Math.max(0, parseInt(val) || 0);
+}
+
+function azulMinus(pid) { const m = session.data.manches[mancheIdx]; m.scores[pid] = Math.max(0, (m.scores[pid]||0) - 1); renderAzulManche(); }
+function azulPlus(pid)  { const m = session.data.manches[mancheIdx]; m.scores[pid] = (m.scores[pid]||0) + 1; renderAzulManche(); }
+
+function addAzulManche() { pushNewAzulManche(); mancheIdx = session.data.manches.length - 1; renderAzulManche(); }
+
+// ============================================================
+//  SMALL WORLD
+// ============================================================
+function initSmallWorld() {
+  session.data = {
+    manches: [],
+    totals: Object.fromEntries(session.players.map(p => [p.id, 0]))
+  };
+  pushNewSmallWorldTour();
+}
+
+function pushNewSmallWorldTour() {
+  session.data.manches.push({
+    scores: Object.fromEntries(session.players.map(p => [p.id, 0]))
+  });
+}
+
+let swActivePlayerIdx = 0; // joueur en train de saisir
+
+function renderSmallWorldManche() {
+  swActivePlayerIdx = 0; // reset : toujours commencer par le joueur 0
+  renderSmallWorldPlayerInput();
+}
+
+function renderSmallWorldPlayerInput() {
+  const { players, data } = session;
+  const m = data.manches[mancheIdx];
+  const totalTours = data.manches.length;
+  const p = players[swActivePlayerIdx];
+  const allDone = swActivePlayerIdx >= players.length;
+
+  const el = document.getElementById('view-game');
+
+  if (allDone) {
+    // Tous les joueurs ont saisi → bouton tour suivant / résultats
+    el.innerHTML = `
+      <div class="manche-screen">
+        ${gameHeroHTML('small_world',
+          'Tour ' + (mancheIdx + 1) + ' / ' + totalTours + ' · ' + players.length + ' joueurs',
+          '<span class="game-hero-all" onclick="openManchesModal()">Voir tout</span>'
+        )}
+        <div style="padding:32px 20px;text-align:center">
+          <div style="font-size:40px;margin-bottom:12px">✅</div>
+          <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px">Tour ${mancheIdx + 1} terminé !</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:24px">Tous les joueurs ont saisi leurs jetons.</div>
+          ${players.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:var(--glass);border-radius:var(--r);margin-bottom:6px">
+            <span style="font-weight:600">${p.name}</span>
+            <span style="color:var(--green);font-weight:700">✓ saisi</span>
+          </div>`).join('')}
+        </div>
+        <div class="manche-actions">
+          <button class="btn btn-glass btn-full" style="margin-bottom:8px" onclick="addSmallWorldTour()">+ Tour suivant</button>
+          <button class="btn btn-primary btn-full" onclick="finishGame('small_world')">Voir les résultats</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="manche-screen">
+      ${gameHeroHTML('small_world',
+        'Tour ' + (mancheIdx + 1) + ' / ' + totalTours,
+        (mancheIdx > 0 && swActivePlayerIdx === 0 ? '<button class="btn btn-glass btn-sm" onclick="mancheIdx--;renderSmallWorldManche()">← Préc.</button>' : '')
+      )}
+      <div style="padding:24px 20px 0;text-align:center">
+        <div style="font-size:13px;color:var(--text-3);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">
+          Joueur ${swActivePlayerIdx + 1} / ${players.length}
+        </div>
+        <div style="font-size:32px;font-weight:900;color:var(--text);margin-bottom:20px">${p.name}</div>
+        <div style="font-size:13px;color:var(--text-2);margin-bottom:16px">Combien de jetons victoire ce tour ?</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px">
+          <button class="btn-circle btn-circle-lg" onclick="swSecretMinus()">−</button>
+          <input type="text" inputmode="numeric" class="score-input" id="sw-secret-inp"
+            style="width:90px;font-size:28px;text-align:center"
+            placeholder="0"
+            oninput="swSecretInput(this.value)">
+          <button class="btn-circle btn-circle-lg" onclick="swSecretPlus()">+</button>
+        </div>
+
+      </div>
+      <div class="manche-actions">
+        <button class="btn btn-primary btn-full" onclick="swConfirmPlayer()">
+          Confirmer →${swActivePlayerIdx < players.length - 1 ? ' Joueur suivant' : ' Terminer le tour'}
+        </button>
+      </div>
+    </div>`;
+
+  setTimeout(() => { const inp = document.getElementById('sw-secret-inp'); if (inp) inp.focus(); }, 80);
+}
+
+function swSecretInput(val) {
+  const p = session.players[swActivePlayerIdx];
+  const m = session.data.manches[mancheIdx];
+  m.scores[p.id] = Math.max(0, parseInt(val) || 0);
+}
+
+function swSecretMinus() {
+  const p = session.players[swActivePlayerIdx];
+  const m = session.data.manches[mancheIdx];
+  m.scores[p.id] = Math.max(0, (m.scores[p.id]||0) - 1);
+  const inp = document.getElementById('sw-secret-inp');
+  if (inp) inp.value = m.scores[p.id] || '';
+}
+
+function swSecretPlus() {
+  const p = session.players[swActivePlayerIdx];
+  const m = session.data.manches[mancheIdx];
+  m.scores[p.id] = (m.scores[p.id]||0) + 1;
+  const inp = document.getElementById('sw-secret-inp');
+  if (inp) inp.value = m.scores[p.id];
+}
+
+function swConfirmPlayer() {
+  swActivePlayerIdx++;
+  renderSmallWorldPlayerInput();
+}
+
+function swInputSilent(pid, val) {
+  const m = session.data.manches[mancheIdx];
+  m.scores[pid] = Math.max(0, parseInt(val) || 0);
+}
+
+function swMinus(pid) { const m = session.data.manches[mancheIdx]; m.scores[pid] = Math.max(0, (m.scores[pid]||0) - 1); renderSmallWorldManche(); }
+function swPlus(pid)  { const m = session.data.manches[mancheIdx]; m.scores[pid] = (m.scores[pid]||0) + 1; renderSmallWorldManche(); }
+function addSmallWorldTour() { pushNewSmallWorldTour(); mancheIdx = session.data.manches.length - 1; renderSmallWorldManche(); }
+
+// ============================================================
+//  SPLENDOR
+// ============================================================
+function initSplendor() {
+  session.data = {
+    scores: Object.fromEntries(session.players.map(p => [p.id, { pv_cartes:'', nobles:'', nb_cartes:'' }]))
+  };
+}
+
+function renderSplendorScores() {
+  const { players, data } = session;
+  const el = document.getElementById('view-game');
+  el.innerHTML = `
+    <div class="manche-screen">
+      ${gameHeroHTML('splendor',
+        'Décompte final · ' + players.length + ' joueurs',
+        '<button class="btn btn-primary btn-sm" onclick="finishGame(\'splendor\')">Résultats →</button>'
+      )}
+      <div class="pca-list">
+        ${players.map(p => {
+          const sc = data.scores[p.id] || {};
+          return `
+            <div class="pca-card">
+              <div class="pca-header">
+                <span class="player-name">${p.name}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div>
+                  <div class="sk-pca-label" style="margin-bottom:4px">PV cartes achetées</div>
+                  <input type="text" inputmode="numeric" class="sk-pca-input" style="width:100%" value="${sc.pv_cartes || ''}"
+                    placeholder="0"
+                    oninput="splendorUpdate('${p.id}','pv_cartes',this.value)"
+                    onblur="safeRerender(event, renderSplendorScores)">
+                </div>
+                <div>
+                  <div class="sk-pca-label" style="margin-bottom:4px">Nobles reçus (combien tu en as ?)</div>
+                  <input type="text" inputmode="numeric" class="sk-pca-input" style="width:100%" value="${sc.nobles || ''}"
+                    placeholder="0"
+                    oninput="splendorUpdate('${p.id}','nobles',this.value)"
+                    onblur="safeRerender(event, renderSplendorScores)">
+                </div>
+                <div>
+                  <div class="sk-pca-label" style="margin-bottom:4px">Cartes achetées (départage)</div>
+                  <input type="text" inputmode="numeric" class="sk-pca-input" style="width:100%" value="${sc.nb_cartes || ''}"
+                    placeholder="0"
+                    oninput="splendorUpdate('${p.id}','nb_cartes',this.value)"
+                    onblur="safeRerender(event, renderSplendorScores)">
+                </div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+      <div class="manche-actions">
+        <button class="btn btn-primary btn-full" onclick="finishGame('splendor')">Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
+function splendorUpdate(pid, field, val) {
+  if (!session.data.scores[pid]) session.data.scores[pid] = {};
+  session.data.scores[pid][field] = Math.max(0, parseInt(val) || 0);
 }
 
 // ============================================================
@@ -4385,6 +4781,8 @@ const SCORE_LABELS = {
   faraway:      { carte1:'Carte 1', carte2:'Carte 2', carte3:'Carte 3', carte4:'Carte 4', carte5:'Carte 5', carte6:'Carte 6', carte7:'Carte 7', carte8:'Carte 8', sanctuaires:'Sanctuaires' },
   conspiracy:   { seigneurs:'Seigneurs', lieux:'Lieux', coalition:'Coalition', maitre_perles:'Maître des Perles', perles:'Perles (départage)' },
   kingdomino:   {},
+  azul:         { lignes:'Lignes complètes (×2)', colonnes:'Colonnes complètes (×7)', cinq_couleurs:'5 même couleur (×10)' },
+  splendor:     { pv_cartes:'PV cartes achetées', nobles:'Nobles reçus', nb_cartes:'Cartes achetées (départage)' },
 };
 
 function renderDetailContent(s, opts) {
@@ -4438,6 +4836,44 @@ function renderDetailContent(s, opts) {
         return `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
           <span style="flex:1;color:var(--text-2)">Manche ${mi + 1} · Mise ${mise} / Plis ${plis}${bonus ? ' +' + bonus : ''}</span>
           <span style="color:${col};font-weight:700;font-size:11px">${pts > 0 ? '+' : ''}${pts} pts</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Cas spécial Azul : manches + bonus fin de partie
+    if (gid === 'azul') {
+      const manches = s.data?.manches || [];
+      const sc = s.data?.scores?.[pid] || {};
+      let rows = [];
+      let cumul = 0;
+      manches.forEach((m, mi) => {
+        const pts = parseInt(m.scores?.[pid]) || 0;
+        cumul += pts;
+        rows.push({ label: 'Manche ' + (mi + 1), pts });
+      });
+      const lignes   = parseInt(sc.lignes)        || 0;
+      const colonnes = parseInt(sc.colonnes)      || 0;
+      const cinq     = parseInt(sc.cinq_couleurs) || 0;
+      if (lignes)   rows.push({ label: 'Lignes complètes ×2',   val: lignes   + '×', pts: lignes   * 2  });
+      if (colonnes) rows.push({ label: 'Colonnes complètes ×7', val: colonnes + '×', pts: colonnes * 7  });
+      if (cinq)     rows.push({ label: '5 même couleur ×10',    val: cinq     + '×', pts: cinq     * 10 });
+      if (!rows.length) return '';
+      return rows.map(row => `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="flex:1;color:var(--text-2)">${row.label}</span>
+        ${row.val !== undefined ? `<span style="font-size:10px;color:rgba(255,255,255,.6);margin-right:6px">${row.val}</span>` : ''}
+        <span style="color:${row.pts >= 0 ? 'var(--accent)' : 'var(--red)'};font-weight:700;font-size:11px">${row.pts >= 0 ? '+' : ''}${row.pts} pts</span>
+      </div>`).join('');
+    }
+
+    // Cas spécial Small World : tours stockés dans data.manches[i].scores[pid]
+    if (gid === 'small_world') {
+      const manches = s.data?.manches || [];
+      if (!manches.length) return '';
+      return manches.map((m, mi) => {
+        const pts = parseInt(m.scores?.[pid]) || 0;
+        return `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="flex:1;color:var(--text-2)">Tour ${mi + 1}</span>
+          <span style="color:var(--accent);font-weight:700;font-size:11px">+${pts} pts</span>
         </div>`;
       }).join('');
     }
@@ -5722,6 +6158,31 @@ function generateDetailShareCard(s) {
         cumul += pts;
         const label = `Manche ${mi + 1}${hasBonus ? ' ⚡Flip7' : ''}`;
         rows.push({ label, pts });
+      });
+      return rows;
+    }
+
+    // Cas Azul dans share card
+    if (gid === 'azul') {
+      const manches = s.data?.manches || [];
+      const sc = s.data?.scores?.[pid] || {};
+      manches.forEach((m, mi) => {
+        rows.push({ label: 'Manche ' + (mi + 1), pts: parseInt(m.scores?.[pid]) || 0 });
+      });
+      const lignes   = parseInt(sc.lignes)        || 0;
+      const colonnes = parseInt(sc.colonnes)      || 0;
+      const cinq     = parseInt(sc.cinq_couleurs) || 0;
+      if (lignes)   rows.push({ label: 'Lignes ×2',   val: lignes   + '×', pts: lignes   * 2  });
+      if (colonnes) rows.push({ label: 'Colonnes ×7', val: colonnes + '×', pts: colonnes * 7  });
+      if (cinq)     rows.push({ label: '5 couleur ×10',val: cinq    + '×', pts: cinq     * 10 });
+      return rows;
+    }
+
+    // Cas Small World dans share card
+    if (gid === 'small_world') {
+      const manches = s.data?.manches || [];
+      manches.forEach((m, mi) => {
+        rows.push({ label: 'Tour ' + (mi + 1), pts: parseInt(m.scores?.[pid]) || 0 });
       });
       return rows;
     }
