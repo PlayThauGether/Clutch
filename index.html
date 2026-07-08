@@ -205,6 +205,7 @@ body::before {
 }
 .field:focus { border-color: var(--accent); }
 .field::placeholder { color: var(--text-3); }
+.field option { background: #1a2a4a; color: var(--text); }
 
 /* ---- BUTTONS ---- */
 .btn {
@@ -852,6 +853,18 @@ body::before {
       <div class="stats-grid" id="stats-grid"></div>
       <div class="section-title">Palmarès global</div>
       <div class="card" id="palmares" style="margin-bottom:14px"></div>
+      <div class="section-title">Face-à-face</div>
+      <div class="card" style="margin-bottom:14px" id="duel-panel">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <select id="duel-p1" class="field" style="flex:1;padding:8px 10px;font-size:13px;appearance:none;-webkit-appearance:none;cursor:pointer" onchange="renderDuel()">
+            <option value="">Joueur 1</option>
+          </select>
+          <select id="duel-p2" class="field" style="flex:1;padding:8px 10px;font-size:13px;appearance:none;-webkit-appearance:none;cursor:pointer" onchange="renderDuel()">
+            <option value="">Joueur 2</option>
+          </select>
+        </div>
+        <div id="duel-result"></div>
+      </div>
       <div class="section-title">Par jeu</div>
       <div id="stats-by-game"></div>
     </section>
@@ -939,6 +952,14 @@ body::before {
     <div style="padding:16px 20px 20px">
       <!-- Liste joueurs ajoutés -->
       <div id="players-modal-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
+
+      <!-- Nom de session -->
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:5px">Nom de la session <span style="font-weight:400">(optionnel)</span></div>
+        <input type="text" class="field" id="session-name-input" placeholder="ex : Soirée PTG juillet…"
+          maxlength="40" style="width:100%;font-size:13px;padding:9px 12px"
+          oninput="sessionNameValue=this.value.trim()">
+      </div>
 
       <!-- Champ ajout -->
       <div style="display:flex;gap:8px;margin-bottom:16px">
@@ -1406,6 +1427,8 @@ function startGameFromModal() {
 // ============================================================
 //  START GAME
 // ============================================================
+let sessionNameValue = '';
+
 function startGame() {
   if (!selectedGameId || quickPlayers.length < 2) return;
   const g = GAMES[selectedGameId];
@@ -1413,10 +1436,12 @@ function startGame() {
   session = {
     id: Date.now().toString(),
     gameId: selectedGameId, gameName: g.name, gameEmoji: g.emoji,
+    sessionName: sessionNameValue.trim() || '',
     players: quickPlayers.map((p, i) => ({ id: i.toString(), ...p })),
     startedAt: new Date().toISOString(),
     data: {}, finished: false
   };
+  sessionNameValue = '';
   if (g.id === 'flip7')         initFlip7();
   if (g.id === 'skull_king')    initSkullKing();
   if (g.id === 'agricola')      initAgricola();
@@ -4726,6 +4751,7 @@ function launchSimplePodium(results) {
     <div class="reveal-buttons" id="sp-btns" style="max-width:420px;opacity:0;transition:opacity .5s;flex-wrap:wrap">
       <button class="btn btn-glass" style="flex:1" onclick="showLiveDetail()">📋 Détail</button>
       <button class="btn btn-glass" style="flex:1" onclick="shareLiveResults()">📤 Partager</button>
+      <button class="btn btn-glass" style="flex:1" onclick="closeReveal();openRematch()">🔁 Rejouer</button>
       <button class="btn btn-glass" style="flex:1" onclick="closeReveal();newGame()">Nouvelle partie</button>
       <button class="btn btn-primary" style="flex:1" onclick="closeReveal();saveAndFinish()">Sauvegarder</button>
     </div>`;
@@ -4829,6 +4855,7 @@ function launchReveal(results) {
     <div id="rev-btns" class="reveal-buttons" style="max-width:500px;margin-top:32px;flex-wrap:wrap">
       <button class="btn btn-glass" style="flex:1" onclick="showLiveDetail()">📋 Détail</button>
       <button class="btn btn-glass" style="flex:1" onclick="shareLiveResults()">📤 Partager</button>
+      <button class="btn btn-glass" style="flex:1" onclick="closeReveal();openRematch()">🔁 Rejouer</button>
       <button class="btn btn-glass" style="flex:1" onclick="closeReveal();newGame()">Nouvelle partie</button>
       <button class="btn btn-primary" style="flex:1" onclick="closeReveal();saveAndFinish()">Sauvegarder</button>
     </div>`;
@@ -4903,6 +4930,165 @@ function closeReveal() {
 }
 
 
+
+// ============================================================
+//  REMATCH RAPIDE
+// ============================================================
+function openRematch() {
+  if (!session) return;
+  const g = GAMES[session.gameId];
+  // Copier les joueurs de la dernière partie
+  window._rematchGameId = session.gameId;
+  window._rematchPlayers = session.players.map(p => ({ name: p.name, emoji: p.emoji || '' }));
+
+  const existing = document.getElementById('modal-rematch');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'modal-rematch';
+  overlay.style.cssText = 'z-index:9999';
+
+  const renderRematchModal = () => {
+    const players = window._rematchPlayers;
+    const maxP = g?.maxPlayers || 8;
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.06em">🔁 Rejouer — ${g?.name || session.gameId}</div>
+        <p style="font-size:12px;color:var(--text-2);margin-bottom:14px">Modifie la liste si besoin puis relance.</p>
+
+        <!-- Liste joueurs -->
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px" id="rematch-list">
+          ${players.map((p, i) => `
+            <div style="display:flex;align-items:center;gap:10px;background:var(--glass);border-radius:var(--r);padding:9px 12px">
+              <span style="flex:1;font-size:14px;font-weight:600">${p.name}</span>
+              <button onclick="removeRematchPlayer(${i})"
+                style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,69,58,.4);background:rgba(255,69,58,.1);color:var(--red);font-size:16px;cursor:pointer;line-height:1">×</button>
+            </div>`).join('')}
+        </div>
+
+        <!-- Ajouter joueur -->
+        ${players.length < maxP ? `
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <input class="field" id="rematch-player-input" placeholder="Ajouter un joueur…"
+            maxlength="20" style="flex:1"
+            onkeydown="if(event.key==='Enter')addRematchPlayer()">
+          <button class="btn btn-glass btn-sm" onclick="addRematchPlayer()" style="flex-shrink:0">+</button>
+        </div>` : ''}
+
+        <div class="modal-actions">
+          <button class="btn btn-glass btn-sm" onclick="document.getElementById('modal-rematch').remove()">Annuler</button>
+          <button class="btn btn-primary btn-sm" ${players.length < 2 ? 'disabled' : ''} onclick="startRematch()">Lancer →</button>
+        </div>
+      </div>`;
+  };
+
+  window._renderRematchModal = renderRematchModal;
+  renderRematchModal();
+  document.body.appendChild(overlay);
+}
+
+function addRematchPlayer() {
+  const inp = document.getElementById('rematch-player-input');
+  if (!inp) return;
+  const name = inp.value.trim();
+  if (!name) return;
+  const g = GAMES[window._rematchGameId];
+  const maxP = g?.maxPlayers || 8;
+  if (window._rematchPlayers.length >= maxP) return toast('Maximum ' + maxP + ' joueurs');
+  if (window._rematchPlayers.find(p => p.name.toLowerCase() === name.toLowerCase())) return toast('Déjà dans la partie');
+  window._rematchPlayers.push({ name, emoji: '' });
+  window._renderRematchModal();
+}
+
+function removeRematchPlayer(i) {
+  window._rematchPlayers.splice(i, 1);
+  window._renderRematchModal();
+}
+
+function startRematch() {
+  const overlay = document.getElementById('modal-rematch');
+  if (overlay) overlay.remove();
+  selectedGameId = window._rematchGameId;
+  quickPlayers = window._rematchPlayers.map(p => ({ name: p.name, emoji: p.emoji || '' }));
+  startGame();
+}
+
+// ============================================================
+//  DUEL STATS
+// ============================================================
+function renderDuel() {
+  const p1 = document.getElementById('duel-p1')?.value;
+  const p2 = document.getElementById('duel-p2')?.value;
+  const el = document.getElementById('duel-result');
+  if (!el) return;
+  if (!p1 || !p2 || p1 === p2) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-3);text-align:center;padding:8px 0">Sélectionne deux joueurs différents</div>';
+    return;
+  }
+  // Parties où les deux sont présents
+  const shared = sessions.filter(s =>
+    s.players?.some(p => p.name === p1) && s.players?.some(p => p.name === p2)
+  );
+  if (!shared.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-3);text-align:center;padding:8px 0">Aucune partie commune trouvée</div>';
+    return;
+  }
+  let w1 = 0, w2 = 0, draws = 0;
+  let scores1 = [], scores2 = [];
+  let lastGame = null;
+  shared.forEach(s => {
+    const r1 = s.results?.find(r => r.name === p1);
+    const r2 = s.results?.find(r => r.name === p2);
+    if (!r1 || !r2) return;
+    if (r1.total > r2.total) w1++;
+    else if (r2.total > r1.total) w2++;
+    else draws++;
+    scores1.push(r1.total);
+    scores2.push(r2.total);
+    if (!lastGame || new Date(s.savedAt) > new Date(lastGame.savedAt)) lastGame = s;
+  });
+  const avg1 = scores1.length ? Math.round(scores1.reduce((a,b)=>a+b,0)/scores1.length) : 0;
+  const avg2 = scores2.length ? Math.round(scores2.reduce((a,b)=>a+b,0)/scores2.length) : 0;
+  const total = w1 + w2 + draws;
+  const lastDate = lastGame ? new Date(lastGame.savedAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '';
+  const rankEmoji1 = w1 > w2 ? '🥇' : w1 < w2 ? '🥈' : '🤝';
+  const rankEmoji2 = w2 > w1 ? '🥇' : w2 < w1 ? '🥈' : '🤝';
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:14px">
+      <div style="text-align:center">
+        <div style="font-size:22px">${rankEmoji1}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text)">${p1}</div>
+        <div style="font-size:28px;font-weight:900;color:${w1>w2?'var(--gold)':'var(--text-2)'}">${w1}</div>
+        <div style="font-size:11px;color:var(--text-3)">victoire${w1>1?'s':''}</div>
+      </div>
+      <div style="text-align:center;color:var(--text-3);font-size:13px;font-weight:700">
+        VS<br>
+        ${draws > 0 ? `<div style="font-size:10px;margin-top:4px">${draws} égalité${draws>1?'s':''}</div>` : ''}
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:22px">${rankEmoji2}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text)">${p2}</div>
+        <div style="font-size:28px;font-weight:900;color:${w2>w1?'var(--gold)':'var(--text-2)'}">${w2}</div>
+        <div style="font-size:11px;color:var(--text-3)">victoire${w2>1?'s':''}</div>
+      </div>
+    </div>
+    <div style="height:1px;background:rgba(255,255,255,.07);margin-bottom:12px"></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-bottom:6px">
+      <span>Parties communes</span><span style="font-weight:600;color:var(--text)">${total}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-bottom:6px">
+      <span>Score moyen ${p1}</span><span style="font-weight:600;color:var(--text)">${avg1} pts</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-bottom:6px">
+      <span>Score moyen ${p2}</span><span style="font-weight:600;color:var(--text)">${avg2} pts</span>
+    </div>
+    ${lastGame ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-2)">
+      <span>Dernière partie</span><span style="font-weight:600;color:var(--text)">${lastGame.gameName} · ${lastDate}</span>
+    </div>` : ''}
+  `;
+}
 
 function generateShareCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans I/O/0/1 pour éviter confusion
@@ -5009,6 +5195,7 @@ function renderHistory() {
         <div style="position:absolute;inset:0;background-image:url('${banner}');background-size:cover;background-position:center;filter:brightness(.32)"></div>
         <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.15) 100%)"></div>
         <div style="position:relative;z-index:1;flex:1;min-width:0">
+          ${s.sessionName ? `<div style="font-size:10px;color:rgba(100,210,255,.8);font-weight:600;margin-bottom:2px">📌 ${s.sessionName}</div>` : ''}
           <div style="font-size:15px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.9)">${s.gameName}</div>
           <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px">${date} · ${s.players.map(p => p.name).join(', ')}</div>
           ${w ? `<div style="font-size:12px;font-weight:700;color:#4ade80;margin-top:3px">${w.name} · ${w.total} pts</div>` : ''}
@@ -5019,6 +5206,7 @@ function renderHistory() {
     return `<div class="history-row" onclick="showDetail('${s.id}')">
       <div style="font-size:20px;color:var(--accent);font-weight:700;min-width:24px;font-family:'Bebas Neue',sans-serif;flex-shrink:0">${s.gameName.charAt(0)}</div>
       <div class="history-meta">
+        ${s.sessionName ? `<div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:2px">📌 ${s.sessionName}</div>` : ''}
         <div class="history-game">${s.gameName}</div>
         <div class="history-date">${date} · ${s.players.map(p => p.name).join(', ')}</div>
         ${w ? `<div class="history-winner">${w.name} · ${w.total} pts</div>` : ''}
@@ -5408,6 +5596,17 @@ function renderStats() {
       <span style="font-size:12px;color:var(--text-2)">${w.games} partie${w.games > 1 ? 's' : ''}</span>
     </div>`).join('') : '';
 
+  // Peupler les selects du duel
+  const allPlayers = [...new Set(sessions.flatMap(s => s.players?.map(p => p.name) || []))].sort();
+  ['duel-p1','duel-p2'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">${id === 'duel-p1' ? 'Joueur 1' : 'Joueur 2'}</option>` +
+      allPlayers.map(n => `<option value="${n}" ${n===cur?'selected':''}>${n}</option>`).join('');
+  });
+  renderDuel();
+
   // Stats par jeu
   const byGameEl = document.getElementById('stats-by-game');
   if (!byGameEl) return;
@@ -5418,12 +5617,17 @@ function renderStats() {
     const gid = s.gameId;
     if (!gameMap[gid]) gameMap[gid] = {
       name: s.gameName || GAMES[gid]?.name || gid,
-      sessions: [], wins: {}
+      sessions: [], wins: {}, record: null
     };
     gameMap[gid].sessions.push(s);
     s.players?.forEach(p => {
       if (!gameMap[gid].wins[p.name]) gameMap[gid].wins[p.name] = { wins: 0, games: 0 };
       gameMap[gid].wins[p.name].games++;
+      // Record : meilleur score individuel
+      const result = s.results?.find(r => r.name === p.name);
+      if (result && (gameMap[gid].record === null || result.total > gameMap[gid].record.total)) {
+        gameMap[gid].record = { name: p.name, total: result.total, date: s.savedAt, gameName: s.gameName };
+      }
     });
     if (s.results?.[0]) {
       const n = s.results[0].name;
@@ -5436,11 +5640,22 @@ function renderStats() {
       .map(([name, w]) => ({ name, ...w }))
       .sort((a,b) => b.wins - a.wins || b.games - a.games)
       .slice(0, 5);
+    const rec = g.record;
+    const recDate = rec?.date ? new Date(rec.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '';
     return `<div class="card" style="margin-bottom:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--text);letter-spacing:.05em">${g.name}</div>
         <div style="font-size:12px;color:var(--text-2)">${g.sessions.length} partie${g.sessions.length>1?'s':''}</div>
       </div>
+      ${rec ? `
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,214,10,.07);border:1px solid rgba(255,214,10,.2);border-radius:var(--r);padding:8px 12px;margin-bottom:10px">
+        <span style="font-size:16px">🏅</span>
+        <div style="flex:1">
+          <div style="font-size:10px;color:rgba(255,214,10,.7);font-weight:700;letter-spacing:.06em;text-transform:uppercase">Record</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${rec.name} <span style="color:var(--gold);font-size:15px">${rec.total} pts</span></div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:1px">${recDate}</div>
+        </div>
+      </div>` : ''}
       ${topPlayers.length ? topPlayers.map((p, i) => `
         <div style="display:flex;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
           <span style="width:20px;font-size:11px;color:var(--text-3)">${i+1}.</span>
