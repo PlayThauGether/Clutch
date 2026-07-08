@@ -228,6 +228,9 @@ body::before {
 /* ---- MANCHE SCREEN ---- */
 .manche-screen { }
 
+.onboard-slide-anim{ animation: onboardIn .28s cubic-bezier(.22,.68,0,1.15) both; }
+@keyframes onboardIn { from { opacity:0; transform: translateX(36px); } to { opacity:1; transform: translateX(0); } }
+
 /* HERO BANDEAU */
 .game-hero {
   position: relative; height: 130px; overflow: hidden;
@@ -962,19 +965,96 @@ body::before {
       </div>
 
       <!-- Champ ajout -->
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input class="field" id="modal-player-input" placeholder="Prénom du joueur..."
-          maxlength="20" style="flex:1"
-          onkeydown="if(event.key==='Enter')addModalPlayer()">
-        <button class="btn btn-glass btn-sm" onclick="addModalPlayer()" style="flex-shrink:0">+ Ajouter</button>
+      <div style="margin-bottom:16px">
+        <div style="display:flex;gap:8px">
+          <input class="field" id="modal-player-input" placeholder="Prénom du joueur..."
+            maxlength="20" style="flex:1"
+            oninput="renderPlayerSuggestions(this.value)"
+            onkeydown="if(event.key==='Enter'){addModalPlayer();renderPlayerSuggestions('')}">
+          <button class="btn btn-glass btn-sm" onclick="addModalPlayer();renderPlayerSuggestions('')" style="flex-shrink:0">+ Ajouter</button>
+        </div>
+        <div id="player-suggestions" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
       </div>
 
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn btn-glass btn-full" id="modal-shuffle-btn" onclick="pickFirstPlayer()" style="font-size:13px" disabled>
+          🎲 Tirer le joueur 1 au hasard
+        </button>
+      </div>
       <div class="modal-actions">
         <button class="btn btn-glass btn-sm" onclick="closeModal('modal-players')">Annuler</button>
         <button class="btn btn-primary btn-sm" id="modal-start-btn" onclick="startGameFromModal()" disabled>
           Lancer →
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ONBOARDING -->
+<div id="modal-onboarding" style="display:none;position:fixed;inset:0;z-index:10000;
+  background:rgba(5,10,20,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:400px">
+
+    <div style="min-height:300px">
+      <div class="onboard-slide" id="onboard-0">
+        <div style="text-align:center;padding:16px 0 28px">
+          <div style="font-size:72px;margin-bottom:18px">&#9889;</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:.08em;color:#fff;margin-bottom:10px">Bienvenue sur Clutch</div>
+          <div style="font-size:15px;color:rgba(255,255,255,.6);line-height:1.6">L'app de score pour tes soir&#233;es jeux avec Play Thau'Gether</div>
+        </div>
+      </div>
+      <div class="onboard-slide" id="onboard-1" style="display:none">
+        <div style="text-align:center;padding:16px 0 20px">
+          <div style="font-size:64px;margin-bottom:14px">&#127922;</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.08em;color:#fff;margin-bottom:10px">Choisis ton jeu</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:18px">S&#233;lectionne un jeu, ajoute les joueurs et c'est parti.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;text-align:left">
+            <div style="background:rgba(255,255,255,.07);border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">&#127183;</span>
+              <div><div style="font-size:13px;font-weight:700;color:#fff">20+ jeux disponibles</div><div style="font-size:11px;color:rgba(255,255,255,.4)">Skull King, Azul, 7 Wonders, Agricola...</div></div>
+            </div>
+            <div style="background:rgba(255,255,255,.07);border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">&#49;&#65039;&#8419;</span>
+              <div><div style="font-size:13px;font-weight:700;color:#fff">Tire le joueur 1 au hasard</div><div style="font-size:11px;color:rgba(255,255,255,.4)">Pour d&#233;cider qui commence !</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="onboard-slide" id="onboard-2" style="display:none">
+        <div style="text-align:center;padding:16px 0 20px">
+          <div style="font-size:64px;margin-bottom:14px">&#127942;</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.08em;color:#fff;margin-bottom:10px">Le suspense d'abord</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:18px">Les scores sont cach&#233;s pendant la partie. Le podium est r&#233;v&#233;l&#233; &#224; la fin !</div>
+          <div style="background:rgba(255,214,10,.08);border:1px solid rgba(255,214,10,.25);border-radius:12px;padding:13px 14px">
+            <div style="font-size:13px;color:rgba(255,214,10,.9);font-weight:600">&#128161; Appuie sur "Sauvegarder" apr&#232;s la partie pour garder l'historique et les stats !</div>
+          </div>
+        </div>
+      </div>
+      <div class="onboard-slide" id="onboard-3" style="display:none">
+        <div style="text-align:center;padding:16px 0 20px">
+          <div style="font-size:64px;margin-bottom:14px">&#128202;</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.08em;color:#fff;margin-bottom:10px">Suis tes stats</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:18px">Historique, palmares, records par jeu, face-&#224;-face entre joueurs...</div>
+          <div style="background:rgba(47,110,98,.2);border:1px solid rgba(47,110,98,.4);border-radius:12px;padding:13px 14px">
+            <div style="font-size:13px;color:rgba(100,210,180,.9);font-weight:600">&#127881; Installe l'app sur ton t&#233;l&#233;phone pour l'avoir toujours sous la main !</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:8px;margin:18px 0">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);transition:all .2s;transform:scale(1.3)" id="onboard-dot-0"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .2s" id="onboard-dot-1"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .2s" id="onboard-dot-2"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .2s" id="onboard-dot-3"></div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button id="onboard-skip-btn" class="btn btn-glass btn-sm" onclick="finishOnboarding()" style="flex:1;font-size:13px">Passer</button>
+      <button id="onboard-next-btn" class="btn btn-primary" onclick="nextOnboardSlide()" style="flex:2;font-size:14px">Suivant</button>
     </div>
   </div>
 </div>
@@ -1310,9 +1390,93 @@ function init() {
   loadCounters();
   // Sessions chargées via loadUserSessions() quand l'utilisateur est connecté
   renderGameGrid();
+  if (!localStorage.getItem('ptg_onboarded')) {
+    setTimeout(showOnboarding, 500);
+  } else {
+    setTimeout(checkRestoreSession, 300);
+  }
+}
+
+// ============================================================
+//  ONBOARDING
+// ============================================================
+let _onboardIdx = 0;
+const _ONBOARD_TOTAL = 4;
+
+function showOnboarding() {
+  const el = document.getElementById('modal-onboarding');
+  if (!el) return;
+  _onboardIdx = 0;
+  el.style.display = 'flex';
+  _updateOnboardSlide();
+}
+
+function _updateOnboardSlide() {
+  for (let i = 0; i < _ONBOARD_TOTAL; i++) {
+    const slide = document.getElementById('onboard-' + i);
+    const dot   = document.getElementById('onboard-dot-' + i);
+    if (slide) {
+      slide.style.display = i === _onboardIdx ? 'block' : 'none';
+      if (i === _onboardIdx) {
+        slide.classList.remove('onboard-slide-anim');
+        void slide.offsetWidth;
+        slide.classList.add('onboard-slide-anim');
+      }
+    }
+    if (dot) {
+      dot.style.background = i === _onboardIdx ? 'var(--accent)' : 'rgba(255,255,255,.2)';
+      dot.style.transform  = i === _onboardIdx ? 'scale(1.3)' : 'scale(1)';
+    }
+  }
+  const nextBtn = document.getElementById('onboard-next-btn');
+  const skipBtn = document.getElementById('onboard-skip-btn');
+  const isLast  = _onboardIdx === _ONBOARD_TOTAL - 1;
+  if (nextBtn) nextBtn.textContent = isLast ? "C'est parti !" : 'Suivant';
+  if (skipBtn) skipBtn.style.display = isLast ? 'none' : '';
+}
+
+function nextOnboardSlide() {
+  if (_onboardIdx < _ONBOARD_TOTAL - 1) { _onboardIdx++; _updateOnboardSlide(); }
+  else finishOnboarding();
+}
+
+function finishOnboarding() {
+  localStorage.setItem('ptg_onboarded', '1');
+  const el = document.getElementById('modal-onboarding');
+  if (el) {
+    el.style.transition = 'opacity .3s';
+    el.style.opacity = '0';
+    setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, 330);
+  }
+  setTimeout(checkRestoreSession, 400);
 }
 
 function saveLocal() { localStorage.setItem('ptg_sessions', JSON.stringify(sessions)); }
+
+// Sauvegarde la partie en cours (pour restauration après fermeture accidentelle)
+let _saveDebounceTimer = null;
+function saveCurrentSession() {
+  if (!session || session.finished) { localStorage.removeItem('ptg_current_session'); return; }
+  localStorage.setItem('ptg_current_session', JSON.stringify({ session, selectedGameId, mancheIdx, sessionNameValue }));
+}
+// Version debounce pour les oninput (évite de sauvegarder à chaque frappe)
+function saveCurrentSessionDebounced() {
+  if (_saveDebounceTimer) clearTimeout(_saveDebounceTimer);
+  _saveDebounceTimer = setTimeout(saveCurrentSession, 600);
+}
+function clearCurrentSession() { localStorage.removeItem('ptg_current_session'); }
+function restoreCurrentSession() {
+  try {
+    const raw = localStorage.getItem('ptg_current_session');
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    if (!saved?.session || saved.session.finished) { clearCurrentSession(); return false; }
+    // Vérifier que la partie n'est pas trop vieille (48h max)
+    const age = Date.now() - new Date(saved.session.startedAt).getTime();
+    if (age > 48 * 60 * 60 * 1000) { clearCurrentSession(); return false; }
+    return saved;
+  } catch(e) { return false; }
+}
 
 // ============================================================
 //  VIEWS
@@ -1327,11 +1491,107 @@ function showView(name) {
   if (name === 'stats')   renderStats();
   if (name === 'counter') renderCounters();
   if (name === 'dice')    initDiceView();
+  if (name === 'home')    checkRestoreSession();
 }
 
 // ============================================================
 //  GAME SELECTION
 // ============================================================
+function checkRestoreSession() {
+  const saved = restoreCurrentSession();
+  const existing = document.getElementById('restore-banner');
+  if (existing) existing.remove();
+  if (!saved) return;
+  const g = GAMES[saved.selectedGameId];
+  const players = saved.session.players?.map(p => p.name).join(', ') || '';
+  const age = Math.round((Date.now() - new Date(saved.session.startedAt).getTime()) / 60000);
+  const ageStr = age < 60 ? age + ' min' : Math.round(age/60) + 'h';
+  // FAB discret en bas à droite
+  const banner = document.createElement('div');
+  banner.id = 'restore-banner';
+  banner.style.cssText = 'position:fixed;bottom:90px;right:16px;z-index:800';
+  banner.innerHTML = `
+    <button onclick="openRestoreModal()"
+      style="display:flex;align-items:center;gap:8px;padding:10px 14px;
+        background:rgba(15,24,41,.92);border:1px solid rgba(100,210,255,.4);
+        border-radius:999px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+        box-shadow:0 4px 20px rgba(0,0,0,.5);cursor:pointer;font-family:inherit;
+        transition:transform .15s,box-shadow .15s"
+      onmouseover="this.style.transform='scale(1.04)'"
+      onmouseout="this.style.transform='scale(1)'">
+      <span style="font-size:16px">⚡</span>
+      <div style="text-align:left">
+        <div style="font-size:12px;font-weight:700;color:rgba(100,210,255,1);line-height:1.2">${g?.name || saved.selectedGameId}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.5);line-height:1.2">Partie en cours · ${ageStr}</div>
+      </div>
+    </button>`;
+  document.body.appendChild(banner);
+}
+
+function openRestoreModal() {
+  const saved = restoreCurrentSession();
+  if (!saved) return;
+  const g = GAMES[saved.selectedGameId];
+  const players = saved.session.players?.map(p => p.name).join(', ') || '';
+  const existing = document.getElementById('modal-restore');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'modal-restore';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div style="text-align:center;padding:8px 0 4px">
+        <div style="font-size:32px;margin-bottom:8px">⚡</div>
+        <div class="modal-title" style="margin-bottom:4px">Partie en cours</div>
+        <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px">${g?.name || saved.selectedGameId}</div>
+        <div style="font-size:13px;color:var(--text-2);margin-bottom:20px">${players}</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-glass btn-sm" onclick="doDiscardSession();document.getElementById('modal-restore').remove()">Abandonner</button>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-restore').remove();doRestoreSession()">Reprendre →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function doRestoreSession() {
+  const raw = localStorage.getItem('ptg_current_session');
+  if (!raw) return;
+  let saved;
+  try { saved = JSON.parse(raw); } catch(e) { return; }
+  if (!saved?.session) return;
+
+  // Restaurer l'état
+  session = saved.session;
+  selectedGameId = saved.selectedGameId;
+  mancheIdx = saved.mancheIdx || 0;
+  sessionNameValue = saved.sessionNameValue || '';
+
+  // Fermer le FAB et le modal
+  const banner = document.getElementById('restore-banner');
+  if (banner) banner.remove();
+  const modal = document.getElementById('modal-restore');
+  if (modal) modal.remove();
+
+  // Activer la vue game sans passer par showView (évite les side effects)
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const gameView = document.getElementById('view-game');
+  if (gameView) gameView.classList.add('active');
+
+  // Render en dernier, après que session.data est bien en place
+  requestAnimationFrame(() => {
+    renderCurrentManche();
+  });
+}
+
+function doDiscardSession() {
+  clearCurrentSession();
+  const banner = document.getElementById('restore-banner');
+  if (banner) banner.remove();
+}
+
 function renderGameGrid() {
   document.getElementById('game-grid').innerHTML = Object.values(GAMES).map(g => {
     const bgStyle = g.img ? `background-image:url('${g.img}')` : '';
@@ -1364,6 +1624,9 @@ function openPlayersModal(id) {
   const banner = g.img_banner || g.img || '';
   const bg = document.getElementById('players-modal-banner-bg');
   if (bg) bg.style.backgroundImage = banner ? `url('${banner}')` : 'none';
+  firstPlayerIdx = -1;
+  document.getElementById('session-name-input').value = '';
+  sessionNameValue = '';
   document.getElementById('modal-player-input').value = '';
   renderModalPlayers();
   document.getElementById('modal-players').classList.add('open');
@@ -1392,6 +1655,7 @@ function addQuickPlayer() { addModalPlayer(); }
 
 function removeQuickPlayer(i) {
   quickPlayers.splice(i, 1);
+  if (firstPlayerIdx >= quickPlayers.length) firstPlayerIdx = -1;
   renderModalPlayers();
 }
 
@@ -1403,17 +1667,63 @@ function renderModalPlayers() {
     list.innerHTML = '<div style="font-size:13px;color:var(--text-2);padding:4px 0">Ajoute au moins 2 joueurs pour lancer</div>';
   } else {
     list.innerHTML = quickPlayers.map((p, i) => `
-      <div style="display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r-lg);padding:9px 12px">
-        <span style="flex:1;font-size:14px;font-weight:600">${p.name}</span>
+      <div style="display:flex;align-items:center;gap:8px;
+        background:${i===firstPlayerIdx?'rgba(255,214,10,.08)':'var(--glass)'};
+        border:1px solid ${i===firstPlayerIdx?'rgba(255,214,10,.35)':'var(--border)'};
+        border-radius:var(--r-lg);padding:9px 12px">
+        ${i===firstPlayerIdx?'<span style="font-size:15px">1️⃣</span>':''}
+        <span style="flex:1;font-size:14px;font-weight:${i===firstPlayerIdx?'700':'600'};
+          color:${i===firstPlayerIdx?'var(--gold)':'var(--text)'}">${p.name}</span>
         <button onclick="removeQuickPlayer(${i})"
           style="background:none;border:none;color:var(--text-3);font-size:16px;cursor:pointer;padding:0 4px;line-height:1">×</button>
       </div>`).join('');
   }
   if (btn) btn.disabled = quickPlayers.length < 2;
+  const shuffleBtn = document.getElementById('modal-shuffle-btn');
+  if (shuffleBtn) shuffleBtn.disabled = quickPlayers.length < 2;
 }
 
 // Alias anciens noms
 function renderQuickPlayers() { renderModalPlayers(); }
+
+function renderPlayerSuggestions(query) {
+  const el = document.getElementById('player-suggestions');
+  if (!el) return;
+  // Tous les prénoms connus depuis l'historique
+  const known = [...new Set(sessions.flatMap(s => s.players?.map(p => p.name) || []))];
+  const already = quickPlayers.map(p => p.name.toLowerCase());
+  const q = (query || '').toLowerCase().trim();
+  const filtered = known
+    .filter(n => !already.includes(n.toLowerCase()))
+    .filter(n => !q || n.toLowerCase().startsWith(q))
+    .sort()
+    .slice(0, 8);
+  if (!filtered.length) { el.innerHTML = ''; return; }
+  el.innerHTML = filtered.map(n => `
+    <button onclick="pickSuggestion('${n.replace(/'/g,"\'")}');renderPlayerSuggestions('')"
+      style="padding:5px 12px;border-radius:20px;border:1px solid rgba(100,210,255,.25);
+      background:rgba(100,210,255,.08);color:var(--accent);font-size:12px;font-weight:600;
+      font-family:inherit;cursor:pointer;transition:background .15s"
+      onmouseover="this.style.background='rgba(100,210,255,.18)'"
+      onmouseout="this.style.background='rgba(100,210,255,.08)'">${n}</button>`).join('');
+}
+
+function pickSuggestion(name) {
+  const inp = document.getElementById('modal-player-input');
+  if (inp) inp.value = name;
+  addModalPlayer();
+  if (inp) inp.value = '';
+  document.getElementById('player-suggestions').innerHTML = '';
+}
+
+let firstPlayerIdx = -1; // index du joueur tiré au sort comme joueur 1
+
+function pickFirstPlayer() {
+  if (quickPlayers.length < 2) return;
+  firstPlayerIdx = Math.floor(Math.random() * quickPlayers.length);
+  renderModalPlayers();
+  toast('1️⃣ ' + quickPlayers[firstPlayerIdx].name + ' commence !');
+}
 function updateStartBtn() {
   const btn = document.getElementById('modal-start-btn');
   if (btn) btn.disabled = quickPlayers.length < 2;
@@ -1471,6 +1781,7 @@ function startGame() {
 //  FLIP 7
 // ============================================================
 function initFlip7() {
+  if (session.data.manches) return; // restauration
   session.data = {
     manches: [],
     totals: Object.fromEntries(session.players.map(p => [p.id, 0]))
@@ -1572,6 +1883,7 @@ function f7InputSilent(pid, val) {
   const { players, data } = session;
   data.totals = Object.fromEntries(players.map(p => [p.id, 0]));
   data.manches.forEach(mn => { players.forEach(p => { data.totals[p.id] += (mn.scores[p.id] || 0); }); });
+  saveCurrentSessionDebounced();
 }
 
 function f7InputChange(pid, val) {
@@ -1618,6 +1930,7 @@ function prevManche() {
 //  SKULL KING
 // ============================================================
 function initSkullKing() {
+  if (session.data.manches) return; // restauration
   session.data.manches = Array.from({ length: 10 }, (_, i) => ({
     num: i + 1, cards: i + 1,
     players: Object.fromEntries(session.players.map(p => [p.id, { mise: '', plis: '', bonus: '' }]))
@@ -1706,6 +2019,7 @@ function updateSKSilent(mi, pid, field, val) {
   } else {
     session.data.manches[mi].players[pid][field] = val === '' ? '' : Math.max(0, parseInt(val) || 0);
   }
+  saveCurrentSessionDebounced();
 }
 
 function updateSK(mi, pid, field, val) {
@@ -1721,6 +2035,7 @@ function nextMancheSK() {
 //  AGRICOLA (tout sur un écran, c'est un décompte final unique)
 // ============================================================
 function initAgricola() {
+  if (session.data.scores) return; // restauration
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id,
       Object.fromEntries(AGRICOLA_CATS.flatMap(s => s.items.map(i => [i.id, 0])))])
@@ -1810,6 +2125,7 @@ function updateAgricola(pid, cat, val) {
     ptsEl.textContent = (pts > 0 ? '+' : '') + pts + ' pt' + (Math.abs(pts) > 1 ? 's' : '');
   }
   updateAgricolaTotals();
+  saveCurrentSessionDebounced();
 }
 
 function updateAgricolaTotals() {
@@ -1836,6 +2152,7 @@ function updateAgricolaTotals() {
 //  7 WONDERS
 // ============================================================
 function initSevenWonders() {
+  if (session.data.scores) return; // déjà initialisé (restauration)
   const fields = ['militaire','tresor','merveille','civil','commercial','guildes','roue','compas','tablette'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
@@ -2039,6 +2356,7 @@ function renderSevenWondersManche() {
 
 function updateSW(pid, field, val) {
   session.data.scores[pid][field] = val;
+  saveCurrentSessionDebounced();
   // Mise à jour sans re-render (pour garder le focus clavier)
   const { players, data } = session;
   players.forEach((p, i) => {
@@ -2115,6 +2433,7 @@ function gameHeroHTML(gameId, subtitle, navHTML) {
 //  DEWAN
 // ============================================================
 function initDewan() {
+  if (session.data.scores) return; // restauration
   const fields = ['histoire', 'feu', 'groupes', 'baies', 'terrain'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
@@ -2335,6 +2654,7 @@ function renderDewanManche() {
 //  WINGSPAN
 // ============================================================
 function initWingspan() {
+  if (session.data.scores) return; // restauration
   const fields = ['oiseaux', 'bonus', 'objectifs', 'oeufs', 'nourriture', 'cartes_gl'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
@@ -2515,6 +2835,7 @@ function renderWingspanManche() {
 //  ITSAWONDERFULWORLD
 // ============================================================
 function initIAWW() {
+  if (session.data.scores) return; // restauration
   const fields = ['bruts', 'combos', 'generaux', 'financiers', 'cartes_emp'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
@@ -2680,6 +3001,7 @@ function renderIAWWManche() {
 const VALKYRIE_PV = [0,1,2,4,6,9,12,15];
 
 function initPillards() {
+  if (session.data.scores) return; // restauration
   const fields = ['pv_partie','valkyrie','armement','offrandes','equipage','or','fer','betail'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, '']))])
@@ -2861,6 +3183,7 @@ function renderPillardsManche() {
 const TERREUR_TABLE = [0,-1,-3,-6,-10,-15,-21];
 
 function initMaraudeurs() {
+  if (session.data.scores) return; // restauration
   const fields = ['gloire','artefacts','butin','ferme','mur','bastion','propheties','terreur','faveur'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f,'']))])
@@ -3091,6 +3414,7 @@ function renderMaraudeursManche() {
 //  NARAK
 // ============================================================
 function initNarak() {
+  if (session.data.scores) return; // restauration
   const fields = ['recherche','temple','idoles','empl_vides','gardiens','cartes','peurs','tuiles_peur','temple_perdu'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f,'']))]));
@@ -3199,6 +3523,7 @@ function renderNarakManche() {
 //  CITADELLES
 // ============================================================
 function initCitadelles() {
+  if (session.data.scores) return; // restauration
   const fields = ['quartiers','cinq_couleurs','premier_8','autre_8'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, f==='quartiers'?'':'non']))]));
@@ -3286,6 +3611,7 @@ function renderCitadellesManche() {
 const ECHOPPE_PV = [0,0,1,4,9,16,25];
 
 function initVivaCatrina() {
+  if (session.data.scores) return; // restauration
   const fields = ['ballons_rouge','ballons_bleu','ballons_vert','ballons_jaune','visiteurs','papillons','chimeres5','chimeres3','echoppes','autels'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f,'']))]));
@@ -3382,6 +3708,7 @@ function renderVivaCatrinaManche() {
 //  FARAWAY
 // ============================================================
 function initConspiracy() {
+  if (session.data.scores) return; // restauration
   const fields = ['seigneurs','lieux','coalition','maitre_perles','perles'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f, f==='maitre_perles'?'non':'']))])
@@ -3511,6 +3838,7 @@ function renderConspiracyManche() {
 }
 
 function initFaraway() {
+  if (session.data.scores) return; // restauration
   const fields = ['carte1','carte2','carte3','carte4','carte5','carte6','carte7','carte8','sanctuaires','tiebreak'];
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, Object.fromEntries(fields.map(f => [f,'']))])
@@ -3609,6 +3937,7 @@ function renderFarawayManche() {
 //  KINGDOMINO
 // ============================================================
 function initKingdomino() {
+  if (session.data.domaines) return; // restauration
   session.data.scores = Object.fromEntries(
     session.players.map(p => [p.id, {
       domaines: JSON.stringify([{ cases: '', couronnes: '' }]),
@@ -3754,6 +4083,8 @@ function renderKingdominoManche() {
     </div>`;
 }
 
+
+
 function renderCurrentManche() {
   if (!session) return;
   window.scrollTo({ top: 0, behavior: 'instant' });
@@ -3777,6 +4108,7 @@ function renderCurrentManche() {
   if (session.gameId === 'splendor')      renderSplendorScores();
   if (session.gameId === 'sushi_go')      renderSushiGoManche();
   if (session.gameId === 'cartographers') renderCartographersSaison();
+  saveCurrentSession();
 }
 
 // ============================================================
@@ -3878,6 +4210,7 @@ function openManchesModal() {
 
 function goToManche(i) {
   mancheIdx = i;
+  saveCurrentSessionDebounced();
   renderCurrentManche();
 }
 
@@ -4208,6 +4541,7 @@ function finishGame(gameId) {
 //  AZUL
 // ============================================================
 function initAzul() {
+  if (session.data.manches) return; // restauration
   session.data = {
     manches: [],
     totals: Object.fromEntries(session.players.map(p => [p.id, 0])),
@@ -4310,11 +4644,13 @@ function azulInputSilent(pid, val) {
   const { players, data } = session;
   data.totals = Object.fromEntries(players.map(p => [p.id, 0]));
   data.manches.forEach(mn => { players.forEach(p => { data.totals[p.id] += (mn.scores[p.id] || 0); }); });
+  saveCurrentSessionDebounced();
 }
 
 function azulBonusSilent(pid, field, val) {
   if (!session.data.scores[pid]) session.data.scores[pid] = {};
   session.data.scores[pid][field] = Math.max(0, parseInt(val) || 0);
+  saveCurrentSessionDebounced();
 }
 
 function azulMinus(pid) { const m = session.data.manches[mancheIdx]; m.scores[pid] = Math.max(0, (m.scores[pid]||0) - 1); renderAzulManche(); }
@@ -4326,6 +4662,7 @@ function addAzulManche() { pushNewAzulManche(); mancheIdx = session.data.manches
 //  SMALL WORLD
 // ============================================================
 function initSmallWorld() {
+  if (session.data.manches) return; // restauration
   session.data = {
     manches: [],
     totals: Object.fromEntries(session.players.map(p => [p.id, 0]))
@@ -4442,6 +4779,7 @@ function swConfirmPlayer() {
 function swInputSilent(pid, val) {
   const m = session.data.manches[mancheIdx];
   m.scores[pid] = Math.max(0, parseInt(val) || 0);
+  saveCurrentSessionDebounced();
 }
 
 function swMinus(pid) { const m = session.data.manches[mancheIdx]; m.scores[pid] = Math.max(0, (m.scores[pid]||0) - 1); renderSmallWorldManche(); }
@@ -4452,6 +4790,7 @@ function addSmallWorldTour() { pushNewSmallWorldTour(); mancheIdx = session.data
 //  SPLENDOR
 // ============================================================
 function initSplendor() {
+  if (session.data.scores) return; // restauration
   session.data = {
     scores: Object.fromEntries(session.players.map(p => [p.id, { pv_cartes:'', nobles:'', nb_cartes:'' }]))
   };
@@ -4509,6 +4848,7 @@ function renderSplendorScores() {
 function splendorUpdate(pid, field, val) {
   if (!session.data.scores[pid]) session.data.scores[pid] = {};
   session.data.scores[pid][field] = Math.max(0, parseInt(val) || 0);
+  saveCurrentSessionDebounced();
 }
 
 
@@ -4516,6 +4856,7 @@ function splendorUpdate(pid, field, val) {
 //  SUSHI GO
 // ============================================================
 function initSushiGo() {
+  if (session.data.manches) return; // restauration
   session.data = {
     manches: [
       { scores: Object.fromEntries(session.players.map(p => [p.id, 0])) },
@@ -4590,10 +4931,11 @@ function renderSushiGoManche() {
 
 function sushiInputSilent(pid, val) {
   session.data.manches[mancheIdx].scores[pid] = Math.max(0, parseInt(val) || 0);
+  saveCurrentSessionDebounced();
 }
 function sushiMinus(pid) { session.data.manches[mancheIdx].scores[pid] = Math.max(0, (session.data.manches[mancheIdx].scores[pid]||0) - 1); renderSushiGoManche(); }
 function sushiPlus(pid)  { session.data.manches[mancheIdx].scores[pid] = (session.data.manches[mancheIdx].scores[pid]||0) + 1; renderSushiGoManche(); }
-function sushiDessertInput(pid, val) { session.data.dessert[pid] = Math.max(0, parseInt(val) || 0); }
+function sushiDessertInput(pid, val) { session.data.dessert[pid] = Math.max(0, parseInt(val) || 0); saveCurrentSessionDebounced(); }
 function sushiDessertMinus(pid) { session.data.dessert[pid] = Math.max(0, (session.data.dessert[pid]||0) - 1); renderSushiGoManche(); }
 function sushiDessertPlus(pid)  { session.data.dessert[pid] = (session.data.dessert[pid]||0) + 1; renderSushiGoManche(); }
 
@@ -4631,6 +4973,7 @@ const CARTO_SAISONS = [
 ];
 
 function initCartographers() {
+  if (session.data.saisons) return; // restauration
   const empty = () => Object.fromEntries(session.players.map(p => [p.id, { obj1:'', obj2:'', pieces:'', monstres:'' }]));
   session.data = {
     saisons: {
@@ -4712,6 +5055,7 @@ function renderCartographersSaison() {
 function cartoUpdate(sid, pid, field, val) {
   if (!session.data.saisons[sid][pid]) session.data.saisons[sid][pid] = {};
   session.data.saisons[sid][pid][field] = Math.max(0, parseInt(val) || 0);
+  saveCurrentSessionDebounced();
 }
 
 // ============================================================
@@ -5122,9 +5466,9 @@ function saveAndFinish() {
     expiresAt
   });
 
+  clearCurrentSession();
   session = null; selectedGameId = null; quickPlayers = [];
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
-  // modal-players remplace session-setup
   renderQuickPlayers();
 
   showShareCodeModal(code, s);
@@ -5171,9 +5515,9 @@ function closeShareCodeModal() {
 }
 
 function newGame() {
+  clearCurrentSession();
   session = null; selectedGameId = null; quickPlayers = [];
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
-  // modal-players remplace session-setup
   renderQuickPlayers();
   showView('home');
 }
@@ -6166,6 +6510,7 @@ function signOutUser() {
     currentUser = null;
     // Revenir aux sessions locales
     try { sessions = JSON.parse(localStorage.getItem('ptg_sessions') || '[]'); } catch(e) { sessions = []; }
+  // checkRestoreSession géré par init()
     closeModal('modal-auth');
     toast('Déconnecté');
     renderHistory();
