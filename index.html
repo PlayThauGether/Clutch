@@ -1147,6 +1147,10 @@ const GAMES_DEF = {
     img:'', img_banner:'' },
   splendor:      { id:'splendor',     reveal:true,  rules:'https://ludovox-fr.exactdn.com/wp-content/uploads/ressources/RExSplendorFR.pdf', name:'Splendor',         emoji:'', desc:'Cartes + Nobles · 15 pts', maxPlayers: 4,
     img:'', img_banner:'' },
+  sushi_go:      { id:'sushi_go',     reveal:false, rules:'https://www.cocktailgames.com/wp-content/uploads/2016/03/Sushi_go_regles_BD.pdf', name:'Sushi Go',          emoji:'', desc:'3 manches + bonus Dessert', maxPlayers: 5,
+    img:'', img_banner:'' },
+  cartographers: { id:'cartographers',reveal:false, rules:'https://regle.escaleajeux.fr/cargr_rg.pdf', name:'Cartographers',     emoji:'', desc:'4 saisons · objectifs + pièces − monstres', maxPlayers: 100,
+    img:'', img_banner:'' },
 };
 // Tri alphabétique
 const GAMES = Object.fromEntries(
@@ -1431,6 +1435,8 @@ function startGame() {
   if (g.id === 'azul')          initAzul();
   if (g.id === 'small_world')   initSmallWorld();
   if (g.id === 'splendor')      initSplendor();
+  if (g.id === 'sushi_go')      initSushiGo();
+  if (g.id === 'cartographers') initCartographers();
   showView('game');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   renderCurrentManche();
@@ -3744,6 +3750,8 @@ function renderCurrentManche() {
   if (session.gameId === 'azul')          renderAzulManche();
   if (session.gameId === 'small_world')   renderSmallWorldManche();
   if (session.gameId === 'splendor')      renderSplendorScores();
+  if (session.gameId === 'sushi_go')      renderSushiGoManche();
+  if (session.gameId === 'cartographers') renderCartographersSaison();
 }
 
 // ============================================================
@@ -3812,6 +3820,29 @@ function openManchesModal() {
       html += `<div class="manche-summary">
         <div class="manche-summary-num">Tour ${mi + 1}</div>
         <div class="manche-summary-scores">${players.map(p => `${p.name}: ✓`).join(' · ')}</div>
+      </div>`;
+    });
+  }
+
+  if (gameId === 'sushi_go') {
+    const MANCHELABELS = ['Manche 1','Manche 2','Manche 3'];
+    data.manches.forEach((m, mi) => {
+      html += `<div class="manche-summary" onclick="goToManche(${mi});closeModal('modal-manches')">
+        <div class="manche-summary-num">${MANCHELABELS[mi]}</div>
+        <div class="manche-summary-scores">${players.map(p => `${p.name}: ✓`).join(' · ')}</div>
+        <span style="color:var(--text-3)">›</span>
+      </div>`;
+    });
+  }
+
+  if (gameId === 'cartographers') {
+    const SLABELS = ['🌸 Printemps','☀️ Été','🍂 Automne','❄️ Hiver'];
+    const SIDS = ['printemps','ete','automne','hiver'];
+    SIDS.forEach((sid, si) => {
+      html += `<div class="manche-summary" onclick="goToManche(${si});closeModal('modal-manches')">
+        <div class="manche-summary-num">${SLABELS[si]}</div>
+        <div class="manche-summary-scores">${players.map(p => `${p.name}: ✓`).join(' · ')}</div>
+        <span style="color:var(--text-3)">›</span>
       </div>`;
     });
   }
@@ -4098,6 +4129,33 @@ function finishGame(gameId) {
     data.manches.forEach(m => { players.forEach(p => { data.totals[p.id] += (m.scores[p.id] || 0); }); });
     results = players.map(p => ({ ...p, total: data.totals[p.id] || 0 }))
       .sort((a, b) => b.total - a.total);
+  }
+
+  // ── SUSHI GO ──────────────────────────────────────────────
+  if (gameId === 'sushi_go') {
+    const dessertPts = calcSushiDessertPts(players, data.dessert);
+    results = players.map(p => {
+      let total = 0;
+      data.manches.forEach(m => { total += (m.scores[p.id] || 0); });
+      total += (dessertPts[p.id] || 0);
+      return { ...p, total, _dessertPts: dessertPts[p.id] || 0 };
+    }).sort((a, b) => b.total - a.total);
+  }
+
+  // ── CARTOGRAPHERS ─────────────────────────────────────────
+  if (gameId === 'cartographers') {
+    results = players.map(p => {
+      let total = 0;
+      const SAISONS = ['printemps','ete','automne','hiver'];
+      SAISONS.forEach(s => {
+        const d = data.saisons[s]?.[p.id] || {};
+        total += (parseInt(d.obj1)    || 0);
+        total += (parseInt(d.obj2)    || 0);
+        total += (parseInt(d.pieces)  || 0);
+        total -= (parseInt(d.monstres)|| 0);
+      });
+      return { ...p, total };
+    }).sort((a, b) => b.total - a.total);
   }
 
   // ── SPLENDOR ──────────────────────────────────────────────
@@ -4426,6 +4484,209 @@ function renderSplendorScores() {
 function splendorUpdate(pid, field, val) {
   if (!session.data.scores[pid]) session.data.scores[pid] = {};
   session.data.scores[pid][field] = Math.max(0, parseInt(val) || 0);
+}
+
+
+// ============================================================
+//  SUSHI GO
+// ============================================================
+function initSushiGo() {
+  session.data = {
+    manches: [
+      { scores: Object.fromEntries(session.players.map(p => [p.id, 0])) },
+      { scores: Object.fromEntries(session.players.map(p => [p.id, 0])) },
+      { scores: Object.fromEntries(session.players.map(p => [p.id, 0])) },
+    ],
+    dessert: Object.fromEntries(session.players.map(p => [p.id, ''])),
+  };
+}
+
+function renderSushiGoManche() {
+  const { players, data } = session;
+  const m = data.manches[mancheIdx];
+  const isLast = mancheIdx === 2;
+  const mancheLabel = ['Manche 1', 'Manche 2', 'Manche 3'][mancheIdx] || 'Manche';
+
+  const el = document.getElementById('view-game');
+  el.innerHTML = `
+    <div class="manche-screen">
+      ${gameHeroHTML('sushi_go',
+        mancheLabel + ' · ' + players.length + ' joueurs',
+        '<span class="game-hero-all" onclick="openManchesModal()">Voir tout</span>' +
+        (mancheIdx > 0 ? '<button class="btn btn-glass btn-sm" onclick="mancheIdx--;renderSushiGoManche()">← Préc.</button>' : '')
+      )}
+      <div class="pca-list">
+        ${players.map(p => `
+          <div class="pca-card">
+            <div class="pca-header">
+              <span class="player-name">${p.name}</span>
+            </div>
+            <div class="pca-controls" style="justify-content:center">
+              <button class="btn-circle" onclick="sushiMinus('${p.id}')">−</button>
+              <input type="text" inputmode="numeric" class="score-input" id="sushiinp-${p.id}"
+                value="${m.scores[p.id] || ''}"
+                oninput="sushiInputSilent('${p.id}', this.value)"
+                onblur="safeRerender(event, renderSushiGoManche)">
+              <button class="btn-circle" onclick="sushiPlus('${p.id}')">+</button>
+            </div>
+            <div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:4px">pts cette manche</div>
+          </div>`).join('')}
+      </div>
+
+      ${isLast ? `
+      <div style="padding:0 16px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">🍮 Dessert (Pudding)</div>
+        <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Entre le nombre de cartes Dessert de chaque joueur — les pts sont calculés automatiquement</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${players.map(p => `
+            <div style="display:flex;align-items:center;gap:10px;background:var(--glass);border-radius:var(--r);padding:10px 14px">
+              <span style="flex:1;font-weight:600;color:var(--text)">${p.name}</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn-circle" style="width:32px;height:32px;font-size:18px"
+                  onclick="sushiDessertMinus('${p.id}')">−</button>
+                <input type="text" inputmode="numeric"
+                  style="width:52px;text-align:center;font-size:18px;font-weight:700;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:var(--text);padding:6px 0"
+                  value="${data.dessert[p.id] || 0}"
+                  oninput="sushiDessertInput('${p.id}', this.value)">
+                <button class="btn-circle" style="width:32px;height:32px;font-size:18px"
+                  onclick="sushiDessertPlus('${p.id}')">+</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <div class="manche-actions">
+        ${!isLast ? `<button class="btn btn-glass btn-full" style="margin-bottom:8px"
+          onclick="mancheIdx++;renderSushiGoManche()">Manche suivante →</button>` : ''}
+        <button class="btn btn-primary btn-full" onclick="finishGame('sushi_go')">Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
+function sushiInputSilent(pid, val) {
+  session.data.manches[mancheIdx].scores[pid] = Math.max(0, parseInt(val) || 0);
+}
+function sushiMinus(pid) { session.data.manches[mancheIdx].scores[pid] = Math.max(0, (session.data.manches[mancheIdx].scores[pid]||0) - 1); renderSushiGoManche(); }
+function sushiPlus(pid)  { session.data.manches[mancheIdx].scores[pid] = (session.data.manches[mancheIdx].scores[pid]||0) + 1; renderSushiGoManche(); }
+function sushiDessertInput(pid, val) { session.data.dessert[pid] = Math.max(0, parseInt(val) || 0); }
+function sushiDessertMinus(pid) { session.data.dessert[pid] = Math.max(0, (session.data.dessert[pid]||0) - 1); renderSushiGoManche(); }
+function sushiDessertPlus(pid)  { session.data.dessert[pid] = (session.data.dessert[pid]||0) + 1; renderSushiGoManche(); }
+
+// Calcule les pts Dessert selon les règles Sushi Go (partage avec arrondi inférieur)
+function calcSushiDessertPts(players, dessertData) {
+  const counts = players.map(p => ({ id: p.id, n: parseInt(dessertData[p.id]) || 0 }));
+  const maxN = Math.max(...counts.map(c => c.n));
+  const minN = Math.min(...counts.map(c => c.n));
+  const pts = Object.fromEntries(players.map(p => [p.id, 0]));
+
+  // Cas où tout le monde a le même nombre → personne ne marque
+  if (maxN === minN) return pts;
+
+  // Plus de cartes → +6 pts partagés
+  const winners = counts.filter(c => c.n === maxN);
+  const winPts = Math.floor(6 / winners.length);
+  winners.forEach(c => { pts[c.id] = winPts; });
+
+  // Moins de cartes → −6 pts partagés
+  const losers = counts.filter(c => c.n === minN);
+  const losePts = Math.floor(6 / losers.length);
+  losers.forEach(c => { pts[c.id] = -losePts; });
+
+  return pts;
+}
+
+// ============================================================
+//  CARTOGRAPHERS
+// ============================================================
+const CARTO_SAISONS = [
+  { id:'printemps', label:'🌸 Printemps', obj:'A + B' },
+  { id:'ete',       label:'☀️ Été',       obj:'B + C' },
+  { id:'automne',   label:'🍂 Automne',   obj:'C + D' },
+  { id:'hiver',     label:'❄️ Hiver',     obj:'D + A' },
+];
+
+function initCartographers() {
+  const empty = () => Object.fromEntries(session.players.map(p => [p.id, { obj1:'', obj2:'', pieces:'', monstres:'' }]));
+  session.data = {
+    saisons: {
+      printemps: empty(),
+      ete:       empty(),
+      automne:   empty(),
+      hiver:     empty(),
+    }
+  };
+}
+
+function renderCartographersSaison() {
+  const { players, data } = session;
+  const saisonInfo = CARTO_SAISONS[mancheIdx] || CARTO_SAISONS[0];
+  const sid = saisonInfo.id;
+  const sData = data.saisons[sid];
+
+  const el = document.getElementById('view-game');
+  el.innerHTML = `
+    <div class="manche-screen">
+      ${gameHeroHTML('cartographers',
+        saisonInfo.label + ' · Objectifs ' + saisonInfo.obj,
+        '<span class="game-hero-all" onclick="openManchesModal()">Voir tout</span>' +
+        (mancheIdx > 0 ? '<button class="btn btn-glass btn-sm" onclick="mancheIdx--;renderCartographersSaison()">← Préc.</button>' : '')
+      )}
+      <div class="pca-list">
+        ${players.map(p => {
+          const d = sData[p.id] || {};
+          return `
+            <div class="pca-card">
+              <div class="pca-header">
+                <span class="player-name">${p.name}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+                <div class="sk-pca-fields">
+                  <div class="sk-pca-field-wrap">
+                    <div class="sk-pca-label">Objectif ${saisonInfo.obj.split(' + ')[0]}</div>
+                    <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.obj1 || ''}"
+                      placeholder="0"
+                      oninput="cartoUpdate('${sid}','${p.id}','obj1',this.value)"
+                      onblur="safeRerender(event, renderCartographersSaison)">
+                  </div>
+                  <div class="sk-pca-field-wrap">
+                    <div class="sk-pca-label">Objectif ${saisonInfo.obj.split(' + ')[1]}</div>
+                    <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.obj2 || ''}"
+                      placeholder="0"
+                      oninput="cartoUpdate('${sid}','${p.id}','obj2',this.value)"
+                      onblur="safeRerender(event, renderCartographersSaison)">
+                  </div>
+                </div>
+                <div class="sk-pca-fields">
+                  <div class="sk-pca-field-wrap">
+                    <div class="sk-pca-label">🪙 Pièces</div>
+                    <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.pieces || ''}"
+                      placeholder="0"
+                      oninput="cartoUpdate('${sid}','${p.id}','pieces',this.value)"
+                      onblur="safeRerender(event, renderCartographersSaison)">
+                  </div>
+                  <div class="sk-pca-field-wrap">
+                    <div class="sk-pca-label">💀 Monstres (cases vides adj.)</div>
+                    <input type="text" inputmode="numeric" class="sk-pca-input" value="${d.monstres || ''}"
+                      placeholder="0"
+                      oninput="cartoUpdate('${sid}','${p.id}','monstres',this.value)"
+                      onblur="safeRerender(event, renderCartographersSaison)">
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+      <div style="padding:16px 0 120px">
+        ${mancheIdx < 3 ? `<button class="btn btn-glass btn-full" style="margin-bottom:10px"
+          onclick="mancheIdx++;renderCartographersSaison()">${CARTO_SAISONS[mancheIdx+1]?.label || 'Saison suivante'} →</button>` : ''}
+        <button class="btn btn-primary btn-full" onclick="finishGame('cartographers')">Voir les résultats</button>
+      </div>
+    </div>`;
+}
+
+function cartoUpdate(sid, pid, field, val) {
+  if (!session.data.saisons[sid][pid]) session.data.saisons[sid][pid] = {};
+  session.data.saisons[sid][pid][field] = Math.max(0, parseInt(val) || 0);
 }
 
 // ============================================================
@@ -4783,6 +5044,8 @@ const SCORE_LABELS = {
   kingdomino:   {},
   azul:         { lignes:'Lignes complètes (×2)', colonnes:'Colonnes complètes (×7)', cinq_couleurs:'5 même couleur (×10)' },
   splendor:     { pv_cartes:'PV cartes achetées', nobles:'Nobles reçus', nb_cartes:'Cartes achetées (départage)' },
+  sushi_go:     { dessert:'Bonus Dessert (Pudding)' },
+  cartographers:{},
 };
 
 function renderDetailContent(s, opts) {
@@ -4838,6 +5101,42 @@ function renderDetailContent(s, opts) {
           <span style="color:${col};font-weight:700;font-size:11px">${pts > 0 ? '+' : ''}${pts} pts</span>
         </div>`;
       }).join('');
+    }
+
+    // Cas spécial Sushi Go : 3 manches + dessert
+    if (gid === 'sushi_go') {
+      const manches = s.data?.manches || [];
+      const dessertPts = calcSushiDessertPts(s.players || [], s.data?.dessert || {});
+      const dessert = dessertPts[pid] || 0;
+      let rows = manches.map((m, mi) => ({ label: 'Manche ' + (mi+1), pts: parseInt(m.scores?.[pid]) || 0 }));
+      if (dessert !== 0) rows.push({ label: '🍮 Bonus Dessert', pts: dessert });
+      return rows.map(row => `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="flex:1;color:var(--text-2)">${row.label}</span>
+        <span style="color:${row.pts>=0?'var(--accent)':'var(--red)'};font-weight:700;font-size:11px">${row.pts>=0?'+':''}${row.pts} pts</span>
+      </div>`).join('');
+    }
+
+    // Cas spécial Cartographers : 4 saisons
+    if (gid === 'cartographers') {
+      const SLABELS = ['🌸 Printemps','☀️ Été','🍂 Automne','❄️ Hiver'];
+      const SIDS = ['printemps','ete','automne','hiver'];
+      const OBJ = ['A + B','B + C','C + D','D + A'];
+      let rows = [];
+      SIDS.forEach((sid, si) => {
+        const d = s.data?.saisons?.[sid]?.[pid] || {};
+        const obj1 = parseInt(d.obj1) || 0;
+        const obj2 = parseInt(d.obj2) || 0;
+        const pieces = parseInt(d.pieces) || 0;
+        const monstres = parseInt(d.monstres) || 0;
+        rows.push({ label: SLABELS[si] + ' · Obj ' + OBJ[si].split(' + ')[0], pts: obj1 });
+        rows.push({ label: SLABELS[si] + ' · Obj ' + OBJ[si].split(' + ')[1], pts: obj2 });
+        if (pieces) rows.push({ label: SLABELS[si] + ' · 🪙 Pièces', pts: pieces });
+        if (monstres) rows.push({ label: SLABELS[si] + ' · 💀 Monstres', pts: -monstres });
+      });
+      return rows.map(row => `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="flex:1;color:var(--text-2);font-size:11px">${row.label}</span>
+        <span style="color:${row.pts>=0?'var(--accent)':'var(--red)'};font-weight:700;font-size:11px">${row.pts>=0?'+':''}${row.pts} pts</span>
+      </div>`).join('');
     }
 
     // Cas spécial Azul : manches + bonus fin de partie
@@ -6158,6 +6457,32 @@ function generateDetailShareCard(s) {
         cumul += pts;
         const label = `Manche ${mi + 1}${hasBonus ? ' ⚡Flip7' : ''}`;
         rows.push({ label, pts });
+      });
+      return rows;
+    }
+
+    // Cas Sushi Go dans share card
+    if (gid === 'sushi_go') {
+      const manches = s.data?.manches || [];
+      const dessertPts = calcSushiDessertPts(s.players || [], s.data?.dessert || {});
+      const dessert = dessertPts[pid] || 0;
+      manches.forEach((m, mi) => { rows.push({ label: 'Manche ' + (mi+1), pts: parseInt(m.scores?.[pid]) || 0 }); });
+      if (dessert !== 0) rows.push({ label: '🍮 Dessert', pts: dessert });
+      return rows;
+    }
+
+    // Cas Cartographers dans share card
+    if (gid === 'cartographers') {
+      const SLABELS = ['🌸','☀️','🍂','❄️'];
+      const SIDS = ['printemps','ete','automne','hiver'];
+      const OBJ = ['A+B','B+C','C+D','D+A'];
+      SIDS.forEach((sid, si) => {
+        const d = s.data?.saisons?.[sid]?.[pid] || {};
+        rows.push({ label: SLABELS[si] + ' Obj ' + OBJ[si].split('+')[0], pts: parseInt(d.obj1)||0 });
+        rows.push({ label: SLABELS[si] + ' Obj ' + OBJ[si].split('+')[1], pts: parseInt(d.obj2)||0 });
+        const p2 = parseInt(d.pieces)||0; const m2 = parseInt(d.monstres)||0;
+        if (p2) rows.push({ label: SLABELS[si] + ' 🪙', pts: p2 });
+        if (m2) rows.push({ label: SLABELS[si] + ' 💀', pts: -m2 });
       });
       return rows;
     }
