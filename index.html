@@ -1390,8 +1390,7 @@ function init() {
   loadCounters();
   // Sessions chargées via loadUserSessions() quand l'utilisateur est connecté
   renderGameGrid();
-  // Migration : injecter gameBanner dans les sessions qui n'en ont pas
-  migrateBanners();
+  // migrateBanners() appelé depuis le callback Firebase loadGameImages
   if (!localStorage.getItem('ptg_onboarded')) {
     setTimeout(showOnboarding, 500);
   } else {
@@ -1456,18 +1455,13 @@ function finishOnboarding() {
 function saveLocal() { localStorage.setItem('ptg_sessions', JSON.stringify(sessions)); }
 
 function migrateBanners() {
-  // Attendre que Firebase ait chargé les images (petit délai)
-  setTimeout(() => {
-    let changed = false;
-    sessions.forEach(s => {
-      if (!s.gameBanner) {
-        const g = GAMES[s.gameId];
-        const url = g?.img_banner || g?.img || '';
-        if (url) { s.gameBanner = url; changed = true; }
-      }
-    });
-    if (changed) saveLocal();
-  }, 2000);
+  let changed = false;
+  sessions.forEach(s => {
+    const g = GAMES[s.gameId];
+    const url = g?.img_banner || g?.img || '';
+    if (url && s.gameBanner !== url) { s.gameBanner = url; changed = true; }
+  });
+  if (changed) saveLocal();
 }
 
 // Sauvegarde la partie en cours (pour restauration après fermeture accidentelle)
@@ -6403,6 +6397,7 @@ function loadGameImages() {
       }
     });
     renderGameGrid();
+    migrateBanners(); // injecter les bannières dans les sessions existantes
     splashImagesLoaded = true;
     hideSplashIfReady();
   }, () => { splashImagesLoaded = true; hideSplashIfReady(); }); // callback d'erreur : ne pas bloquer le splash
