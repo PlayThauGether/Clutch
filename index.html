@@ -6824,19 +6824,34 @@ function closeSharePicker() {
 function loadImageAsDataURL(url) {
   return new Promise((resolve) => {
     if (!url) { resolve(null); return; }
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const c = document.createElement('canvas');
-        c.width = img.naturalWidth; c.height = img.naturalHeight;
-        c.getContext('2d').drawImage(img, 0, 0);
-        resolve(c.toDataURL('image/jpeg', 0.92));
-      } catch(e) { resolve(url); } // fallback : URL originale
-    };
-    img.onerror = () => resolve(url);
-    img.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
-    setTimeout(() => resolve(url), 4000); // timeout 4s
+
+    const tryLoad = (src) => new Promise((res) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      let done = false;
+      const finish = (result) => { if (!done) { done = true; res(result); } };
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth; c.height = img.naturalHeight;
+          c.getContext('2d').drawImage(img, 0, 0);
+          finish(c.toDataURL('image/jpeg', 0.92));
+        } catch(e) { finish(null); }
+      };
+      img.onerror = () => finish(null);
+      img.src = src;
+      setTimeout(() => finish(null), 5000);
+    });
+
+    // Tentative 1 : URL directe
+    tryLoad(url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now()).then(result => {
+      if (result) { resolve(result); return; }
+      // Tentative 2 : via proxy CORS
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+      tryLoad(proxyUrl).then(result2 => {
+        resolve(result2 || url); // fallback URL originale
+      });
+    });
   });
 }
 
