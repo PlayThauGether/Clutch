@@ -1390,6 +1390,8 @@ function init() {
   loadCounters();
   // Sessions chargées via loadUserSessions() quand l'utilisateur est connecté
   renderGameGrid();
+  // Migration : injecter gameBanner dans les sessions qui n'en ont pas
+  migrateBanners();
   if (!localStorage.getItem('ptg_onboarded')) {
     setTimeout(showOnboarding, 500);
   } else {
@@ -1452,6 +1454,21 @@ function finishOnboarding() {
 }
 
 function saveLocal() { localStorage.setItem('ptg_sessions', JSON.stringify(sessions)); }
+
+function migrateBanners() {
+  // Attendre que Firebase ait chargé les images (petit délai)
+  setTimeout(() => {
+    let changed = false;
+    sessions.forEach(s => {
+      if (!s.gameBanner) {
+        const g = GAMES[s.gameId];
+        const url = g?.img_banner || g?.img || '';
+        if (url) { s.gameBanner = url; changed = true; }
+      }
+    });
+    if (changed) saveLocal();
+  }, 2000);
+}
 
 // Sauvegarde la partie en cours (pour restauration après fermeture accidentelle)
 let _saveDebounceTimer = null;
@@ -1746,6 +1763,7 @@ function startGame() {
   session = {
     id: Date.now().toString(),
     gameId: selectedGameId, gameName: g.name, gameEmoji: g.emoji,
+    gameBanner: g.img_banner || g.img || '',
     sessionName: sessionNameValue.trim() || '',
     players: quickPlayers.map((p, i) => ({ id: i.toString(), ...p })),
     startedAt: new Date().toISOString(),
@@ -5533,7 +5551,7 @@ function renderHistory() {
     const w = s.results?.[0];
     const date = new Date(s.savedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
     const g = GAMES[s.gameId];
-    const banner = g?.img_banner || g?.img || '';
+    const banner = s.gameBanner || g?.img_banner || g?.img || '';
     if (banner) {
       return `<div class="history-row has-banner" onclick="showDetail('${s.id}')">
         <div style="position:absolute;inset:0;background-image:url('${banner}');background-size:cover;background-position:center;filter:brightness(.32)"></div>
@@ -5588,7 +5606,7 @@ function renderDetailContent(s, opts) {
     ? new Date(s.savedAt).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
     : new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   const g = GAMES[s.gameId];
-  const banner = g?.img_banner || g?.img || '';
+  const banner = s.gameBanner || g?.img_banner || g?.img || '';
   const labels = SCORE_LABELS[s.gameId] || {};
   const detailIdPrefix = opts.idPrefix || s.id || 'live';
 
@@ -6889,7 +6907,7 @@ function doSaveImage() {
 
 function generateShareCard(s) {
   const g = GAMES[s.gameId];
-  const bannerUrl = g?.img_banner || g?.img || '';
+  const bannerUrl = s.gameBanner || g?.img_banner || g?.img || '';
   const date = s.savedAt
     ? new Date(s.savedAt).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
     : new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
@@ -6960,7 +6978,7 @@ function generateShareCard(s) {
 // ============================================================
 function generateDetailShareCard(s) {
   const g = GAMES[s.gameId];
-  const banner = g?.img_banner || g?.img || '';
+  const banner = s.gameBanner || g?.img_banner || g?.img || '';
   const date = s.savedAt
     ? new Date(s.savedAt).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
     : new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
