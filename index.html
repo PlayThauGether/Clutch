@@ -1591,6 +1591,8 @@ function doRestoreSession() {
   const gameView = document.getElementById('view-game');
   if (gameView) gameView.classList.add('active');
 
+  requestWakeLock();
+
   // Render en dernier, après que session.data est bien en place
   requestAnimationFrame(() => {
     renderCurrentManche();
@@ -1787,6 +1789,7 @@ function startGame() {
   showView('game');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   renderCurrentManche();
+  requestWakeLock();
 }
 
 // ============================================================
@@ -5528,6 +5531,7 @@ function closeShareCodeModal() {
 
 function newGame() {
   clearCurrentSession();
+  releaseWakeLock();
   session = null; selectedGameId = null; quickPlayers = [];
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
   renderQuickPlayers();
