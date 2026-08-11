@@ -7442,8 +7442,7 @@ function setBiblioFilter(filter) {
 
 // ── Recherche BGG ──────────────────────────────────────────
 async function bggFetch(bggUrl) {
-  // Proxy CORS pour contourner les restrictions de BGG
-  const proxy = 'https://corsproxy.io/?' + encodeURIComponent(bggUrl);
+  const proxy = 'https://bgg-proxy.playthaugether.workers.dev/?url=' + encodeURIComponent(bggUrl);
   const res = await fetch(proxy);
   return await res.text();
 }
