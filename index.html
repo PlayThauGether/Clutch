@@ -7441,10 +7441,17 @@ function setBiblioFilter(filter) {
 }
 
 // ── Recherche BGG ──────────────────────────────────────────
+async function bggFetch(bggUrl) {
+  // Proxy CORS pour contourner les restrictions de BGG
+  const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bggUrl);
+  const res = await fetch(proxy);
+  const json = await res.json();
+  return json.contents;
+}
+
 async function searchBGG(query) {
   const url = `https://boardgamegeek.com/xmlapi2/search?query=${encodeURIComponent(query)}&type=boardgame&exact=0`;
-  const res = await fetch(url);
-  const text = await res.text();
+  const text = await bggFetch(url);
   const xml = new DOMParser().parseFromString(text, 'text/xml');
   const items = [...xml.querySelectorAll('item')].slice(0, 8);
   return items.map(item => ({
@@ -7456,8 +7463,7 @@ async function searchBGG(query) {
 
 async function fetchBGGDetail(id) {
   const url = `https://boardgamegeek.com/xmlapi2/thing?id=${id}&stats=1`;
-  const res = await fetch(url);
-  const text = await res.text();
+  const text = await bggFetch(url);
   const xml = new DOMParser().parseFromString(text, 'text/xml');
   const item = xml.querySelector('item');
   if (!item) return {};
