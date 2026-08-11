@@ -7443,10 +7443,9 @@ function setBiblioFilter(filter) {
 // ── Recherche BGG ──────────────────────────────────────────
 async function bggFetch(bggUrl) {
   // Proxy CORS pour contourner les restrictions de BGG
-  const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bggUrl);
+  const proxy = 'https://corsproxy.io/?' + encodeURIComponent(bggUrl);
   const res = await fetch(proxy);
-  const json = await res.json();
-  return json.contents;
+  return await res.text();
 }
 
 async function searchBGG(query) {
