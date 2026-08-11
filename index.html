@@ -848,10 +848,13 @@ body::before {
 
       <!-- Historique -->
       <div id="scores-panel-history">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div class="section-title" style="margin:0">Parties jouées</div>
           <button class="btn btn-glass btn-sm" onclick="openImportCode()">+ Importer un code</button>
         </div>
+        <input class="field" id="history-search" placeholder="Rechercher un jeu ou un joueur..."
+          style="width:100%;margin-bottom:10px;font-size:13px;padding:9px 12px"
+          oninput="renderHistory()">
         <div id="history-list" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
 
@@ -5590,8 +5593,20 @@ function newGame() {
 // ============================================================
 function renderHistory() {
   const el = document.getElementById('history-list');
-  const sorted = [...sessions].sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-  if (!sorted.length) { el.innerHTML = '<div class="empty"><div>Aucune partie enregistrée</div></div>'; return; }
+  if (!el) return;
+  const query = (document.getElementById('history-search')?.value || '').toLowerCase().trim();
+  const sorted = [...sessions]
+    .filter(s => {
+      if (!query) return true;
+      return s.gameName?.toLowerCase().includes(query)
+          || s.sessionName?.toLowerCase().includes(query)
+          || s.players?.some(p => p.name?.toLowerCase().includes(query));
+    })
+    .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+  if (!sorted.length) {
+    el.innerHTML = `<div class="empty"><div>${query ? 'Aucun résultat pour "' + query + '"' : 'Aucune partie enregistrée'}</div></div>`;
+    return;
+  }
   el.innerHTML = sorted.map(s => {
     const w = s.results?.[0];
     const date = new Date(s.savedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
